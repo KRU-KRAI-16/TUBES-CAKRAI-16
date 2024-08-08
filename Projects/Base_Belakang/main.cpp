@@ -37,6 +37,7 @@
 // diameter roda
 #define Diameter 0.15f
 
+DigitalOut led(PC_13);
 
 // =================SETUP MOTOR / CREATE OBJECT MOTOR===============================
 //Motor_1 belakang kanan
@@ -77,6 +78,7 @@ int ms_ticker_read(){
     return us_ticker_read()/1000;
 
 }
+
 //-----------------------------------------------------------------------------------
 
 //==============================SETUP CANBUS==========================================
@@ -104,9 +106,12 @@ Omni4Wheel Omnibase(&millis, DfromCenter, Diameter, 0.0f);
 
 // define variabel untuk kecepatan; refrensi posisi dari robot
 float Vx, Vy, Omega;
+float BR_speed, BL_speed;
 
-#define CONSTSPEED 1f
+#define CONSTSPEED 1.0f
 #define CONSTOMEGA 0.5f
+#define ANALOG_SCALE_MOVE 256.0f
+#define ANALOG_SCALE_ROTATE 128.0f
 
 // =====================================================================================
 
@@ -118,7 +123,7 @@ int main()
     ms_tick.attach_us(onMillisecondTicker,1000);
 
     // board manager kirim terus updatenya
-    BM_Belakang.IsAlwaysSend(1);
+    // BM_Belakang.IsAlwaysSend(1);
 
     // --------------------------------------------------------------------------
     
@@ -128,32 +133,44 @@ int main()
     {
         // if read can, dia akan set speed untuk motor 1 dan motor 2
         // yang dalam kurung itu dalam milisecond
+        
+
         if (BM_Belakang.readCAN(3)){
+            if (millis - data_timer > 500)
+            {
+                led = !led;
+                data_timer = millis;
+            }
 
-            //BM motor 1 = Kiri Kanan
-            //BM motor 2 = Maju Mundur
-            //integer = Omega
-            
-            // menerima data RC dari CAN untuk diubah jadi data kecepatan m/s
-            Vx = (static_cast<float>(BM_Belakang.getMotor1()) / 10000)*CONSTSPEED;
-            Vy = (static_cast<float>(BM_Belakang.getMotor2()) / 10000)*CONSTSPEED;
-            Omega = (static_cast<float>(BM_Belakang.getInteger()) / 10000)*CONSTOMEGA;
-            
-            // set vx, vy, omega untuk ke omnibase
-            Omnibase.setVx(Vx);
-            Omnibase.setVy(Vy);
-            Omnibase.setOmega(Omega);
 
-            // untuk serial print doang
-            printf("Vx = %f, Vy = %f, Omega = %f\n", Vx, Vy, Omega);
-
-            // calculate inverse kinematics untuk dapat speed setiap motor
-            Omnibase.InverseCalc();
-
-            // set speed motor 1 dan motor 2 sesuai dengan hasil inverse kinematics
-            motor_1.speed(Omnibase.getBRSpeed());
-            motor_2.speed(Omnibase.getBLSpeed());
+            can_timeout_timer = millis;
         }
+        //BM motor 1 = Kiri Kanan
+        //BM motor 2 = Maju Mundur
+        //integer = Omega
+        
+        // menerima data RC dari CAN untuk diubah jadi data kecepatan m/s
+        Vx = (static_cast<float>(BM_Belakang.getMotor1()) / ANALOG_SCALE_MOVE)*CONSTSPEED;
+        Vy = (static_cast<float>(BM_Belakang.getMotor2()) / ANALOG_SCALE_MOVE)*CONSTSPEED;
+        Omega = (static_cast<float>(BM_Belakang.getInteger()) / ANALOG_SCALE_ROTATE)*CONSTOMEGA;
+        
+        // set vx, vy, omega untuk ke omnibase
+        Omnibase.setVx(Vx);
+        Omnibase.setVy(Vy);
+        Omnibase.setOmega(Omega);
+
+        // calculate inverse kinematics untuk dapat speed setiap motor
+        Omnibase.InverseCalc();
+
+        BL_speed = Omnibase.getBLSpeed();
+        BR_speed = Omnibase.getBRSpeed();
+
+        // untuk serial print doang
+        printf("Vx = %f, Vy = %f, Omega = %f, BR_speed = %f, BL_speed = %f\n", Vx, Vy, Omega, BR_speed, BL_speed);
+
+        // set speed motor 1 dan motor 2 sesuai dengan hasil inverse kinematics
+        motor_1.speed(Omnibase.getBRSpeed());
+        motor_2.speed(Omnibase.getBLSpeed());
     }
     
 

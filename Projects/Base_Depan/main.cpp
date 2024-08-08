@@ -81,6 +81,8 @@ BMAktuatorKRAI BM_Base(ID_BM_BASE, &millis);
 
 #define SPEED_CONST 1.0f
 #define OMEGA_CONST 0.5f
+#define ANALOG_SCALE_MOVE 256.0f
+#define ANALOG_SCALE_ROTATE 128.0f
 unsigned long* millisPtr;
 Omni4Wheel omni4Wheel(millisPtr, 0.3, 0.05);
 
@@ -91,9 +93,12 @@ int main()
     //=========================INITIALIZATION====================================
 
     ms_tick.attach_us(onMillisecondTicker,1000);
-    BM_Base.IsAlwaysSend(1);
+    // BM_Base.IsAlwaysSend(1);
 
     // --------------------------------------------------------------------------
+
+    float vx, vy, omega;
+    float FL_speed, FR_speed;
 
     while (true)
     {
@@ -112,18 +117,23 @@ int main()
 
         //============================USER CODE==================================
 
-        float vx = static_cast<float>(BM_Base.getMotor1())/10000 * SPEED_CONST;
-        float vy = static_cast<float>(BM_Base.getMotor2())/10000 * SPEED_CONST;
-        float omega = static_cast<float>(BM_Base.getInteger())/10000 * OMEGA_CONST;
-
+        vx = (static_cast<float>(BM_Base.getMotor1())/ANALOG_SCALE_MOVE) * SPEED_CONST;
+        vy = (static_cast<float>(BM_Base.getMotor2())/ANALOG_SCALE_MOVE) * SPEED_CONST;
+        omega = (static_cast<float>(BM_Base.getInteger())/ANALOG_SCALE_ROTATE) * OMEGA_CONST;
+        
         omni4Wheel.setVx(vx);
         omni4Wheel.setVy(vy);
         omni4Wheel.setOmega(omega);
 
         omni4Wheel.InverseCalc();
 
-        motor_FL.speed(omni4Wheel.getFLSpeed());
-        motor_FR.speed(omni4Wheel.getFRSpeed());
+        FL_speed = omni4Wheel.getFLSpeed();
+        FR_speed = omni4Wheel.getFRSpeed();
+
+        printf("vx: %f, vy: %f, omega: %f, FL_speed = %f, FR_speed = %f\n", vx, vy, omega, FL_speed, FR_speed);
+
+        motor_FL.speed(FL_speed);
+        motor_FR.speed(FR_speed);
 
         // ----------------------------------------------------------------------
     }
