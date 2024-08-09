@@ -10,6 +10,7 @@
 #include "../../../KRAI_library/Motor/Motor.h"
 #include  "../../../KRAI_library/encoderKRAI/encoderKRAI.h"
 #include "../../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../../KRAI_library/MovingAverage/MovingAverage.h"
 
 // define motor 1
 #define PWM1 BMV1_PWM_MOTOR_1
@@ -47,6 +48,7 @@ encoderKRAI enc_motor_1(CHA1, CHB1, PPR, Encoding::X4_ENCODING);
 //Motor_2 belakang kiri (BL)
 Motor motor_2(PWM2, FOR2, REV2);
 encoderKRAI enc_motor_2(CHA2, CHB2, PPR, Encoding::X4_ENCODING);
+MovingAverage movAvg(10);
 
 //=========================SETUP UART SERIAL PRINT===================================
 // untuk serial print doang
@@ -136,7 +138,7 @@ int main()
     float PWM_motor_BR;
 
 
-    while (1)
+    while (true)
     {
         // if read can, dia akan set speed untuk motor 1 dan motor 2
         // yang dalam kurung itu dalam milisecond
@@ -154,6 +156,9 @@ int main()
         if (millis - lastmillispulse > 10.0f){
             rotatePerSec_BL = (enc_motor_1.getPulses() - pulseThen_BL)/(PPR*0.01);
             rotatePerSec_BR = (enc_motor_2.getPulses() - pulseThen_BR)/(PPR*0.01);
+
+            rotatePerSec_BL = movAvg.movingAverage(rotatePerSec_BL);
+            rotatePerSec_BR = movAvg.movingAverage(rotatePerSec_BR);
 
             pulseThen_BL = enc_motor_1.getPulses();
             pulseThen_BR = enc_motor_2.getPulses();

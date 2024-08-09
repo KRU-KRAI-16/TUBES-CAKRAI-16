@@ -9,6 +9,7 @@
 #include "../../../KRAI_library/Motor/Motor.h"
 #include "../../../KRAI_library/encoderKRAI/encoderKRAI.h"
 #include "../../../KRAI_library/InverseKinematics/Omni4Wheel.h"
+#include "../../../KRAI_library/MovingAverage/MovingAverage.h"
 
 #define PWM_FL BMV1_PWM_MOTOR_1
 #define FOR_FL BMV1_FOR_MOTOR_1
@@ -31,7 +32,7 @@ Motor motor_FL(PWM_FL, FOR_FL , REV_FL);
 Motor motor_FR(PWM_FR, FOR_FR , REV_FR);
 encoderKRAI encoder_FL(CHA_FL , CHB_FL , PPR , Encoding::X4_ENCODING);
 encoderKRAI encoder_FR(CHA_FR , CHB_FR , PPR , Encoding::X4_ENCODING);
-// MovingAverage movAvg(10);
+MovingAverage movAvg(10);
 
 //============================SETUP BASIC TIMER======================================
 Ticker ms_tick;
@@ -128,8 +129,8 @@ int main()
             rotatePerSec_FL = (encoder_FL.getPulses() - pulseThen_FL)/(PPR*0.01);
             rotatePerSec_FR = (encoder_FR.getPulses() - pulseThen_FR)/(PPR*0.01);
 
-            // rotatePerSec_FL = movAvg.movingAverage(rotatePerSec_FL);
-            // rotatePerSec_FR = movAvg.movingAverage(rotatePerSec_FR);
+            rotatePerSec_FL = movAvg.movingAverage(rotatePerSec_FL);
+            rotatePerSec_FR = movAvg.movingAverage(rotatePerSec_FR);
 
             pulseThen_FL = encoder_FL.getPulses();
             pulseThen_FR = encoder_FR.getPulses();
