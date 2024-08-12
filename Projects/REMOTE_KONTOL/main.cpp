@@ -58,7 +58,7 @@ FileHandle *mbed::mbed_override_console(int fd) {
 #define CAN_TX PD_0
 #define CAN_RX PD_1
 #define ID_BM_BASE 1
-
+#define ID_BM_GRIPPER 2
 
 
 
@@ -70,7 +70,7 @@ CAN can(PA_11, PA_12, 500000); //Cek lagi pin Transmit Receive di Board 1
 
 
 BMAktuatorKRAI sender (ID_BM_BASE, &millis);
-
+BMAktuatorKRAI gripper (ID_BM_GRIPPER, &millis);
 
  
 
@@ -118,6 +118,7 @@ int main()
     int Duckspd_min = -64;
     int DuckOmega_max = 32;
     int DuckOmega_min = -32;
+    bool ToGrip =  false;
 
     // --------------------------------------------------------------------------
 
@@ -126,14 +127,16 @@ int main()
         stik.updateMillis(millis);
         stik.baca_data();
         stik.olah_data();
+        ToGrip = false;
      
 
        //==============================INPUT GETTER=========================================//
         RawAxisL_x = stik.getLX();
         RawAxisL_y = stik.getLY();
         RawAxisR_x = stik.getRX();
-        
-        //TO SEND
+        ToGrip = stik.getKotak();
+
+               //TO SEND
         
         VX = RawAxisL_x +=1;
         VY = RawAxisL_y +=1;
@@ -162,9 +165,14 @@ int main()
             else if (Omega<=DuckOmega_min){
                 Omega = DuckOmega_min;
             }
+
+
         }
         
-      
+        //=====================================Code gripper=======================//
+        if (stik.getKotak()){
+            ToGrip = true;
+        }
 
         
         
@@ -172,12 +180,13 @@ int main()
         sender.setMotor2(VY);
         sender.setInteger(Omega);
         
+        gripper.setSwitch1(ToGrip);
         
         
         //=============================CAN BUS COMM==========================//
-        sender.sendCAN(sender.getNoBM(),5);
-        printf("VX: %i , VY: %i , Omega: %i", VX, VY, Omega);
-       
+    
+       sender.sendCAN(sender.getNoBM(),5);
+       gripper.sendCAN(gripper.getNoBM(),5);
         //============================USER CODE==================================
         
       
