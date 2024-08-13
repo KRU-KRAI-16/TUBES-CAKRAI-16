@@ -10,6 +10,7 @@
 #include "../../../KRAI_library/Motor/Motor.h"
 #include  "../../../KRAI_library/encoderKRAI/encoderKRAI.h"
 #include "../../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../../KRAI_library/MiniPID/MiniPID.h"
 #include "../../../KRAI_library/MovingAverage/MovingAverage.h"
 
 // define motor 1
@@ -33,7 +34,7 @@
 #define PPR 537.6f //537.6
 
 // define diameter and distance from center
-#define DfromCenter 0.35f
+#define DfromCenter 0.395f
 
 // diameter roda
 #define Diameter 0.15f
@@ -49,6 +50,15 @@ encoderKRAI enc_motor_1(CHA1, CHB1, PPR, Encoding::X4_ENCODING);
 Motor motor_2(PWM2, FOR2, REV2);
 encoderKRAI enc_motor_2(CHA2, CHB2, PPR, Encoding::X4_ENCODING);
 MovingAverage movAvg(10);
+
+//PID params
+double Kp = 0.10f;
+double Ki = 0.0034f;
+double Kd = 0.04f;
+
+//MiniPID Objects
+MiniPID pid_motor_1(Kp, Ki, Kd);
+MiniPID pid_motor_2(Kp, Ki, Kd);
 
 //=========================SETUP UART SERIAL PRINT===================================
 // untuk serial print doang
@@ -104,7 +114,7 @@ BMAktuatorKRAI BM_Belakang(ID_BM_PENERIMA, &millis);
 //=======================WALAHI INVERSE KINEMATICS KERJA PLEASE=========================
 // untuk define object omniwheel
 
-Omni4Wheel Omnibase(&millis, DfromCenter, Diameter, 0.0f);
+Omni4Wheel Omnibase(&millis, DfromCenter, Diameter);
 
 // define variabel untuk kecepatan; refrensi posisi dari robot
 float Vx, Vy, Omega;
@@ -172,7 +182,7 @@ int main()
         // menerima data RC dari CAN untuk diubah jadi data kecepatan m/s
         Vx = (static_cast<float>(BM_Belakang.getMotor1()) / ANALOG_SCALE_MOVE)*CONSTSPEED;
         Vy = -(static_cast<float>(BM_Belakang.getMotor2()) / ANALOG_SCALE_MOVE)*CONSTSPEED;
-        Omega = (static_cast<float>(BM_Belakang.getInteger()) / ANALOG_SCALE_ROTATE)*CONSTOMEGA;
+        Omega = -(static_cast<float>(BM_Belakang.getInteger()) / ANALOG_SCALE_ROTATE)*CONSTOMEGA;
         
         // set vx, vy, omega untuk ke omnibase
         Omnibase.setVx(Vx);
@@ -186,7 +196,7 @@ int main()
         BR_speed = Omnibase.getBRSpeed();
 
         // untuk serial print doang
-        printf("Vx = %f, Vy = %f, Omega = %f, BR_speed = %f, BL_speed = %f, BR_RPS = %f, BL_RPS = %f\n", Vx, Vy, Omega, BR_speed, BL_speed, rotatePerSec_BR, rotatePerSec_BL);
+        // printf("Vx = %f, Vy = %f, Omega = %f, BR_speed = %f, BL_speed = %f, BR_RPS = %f, BL_RPS = %f\n", Vx, Vy, Omega, BR_speed, BL_speed, rotatePerSec_BR, rotatePerSec_BL);
 
         // set speed motor 1 dan motor 2 sesuai dengan hasil inverse kinematics
         motor_1.speed(Omnibase.getBRSpeed());

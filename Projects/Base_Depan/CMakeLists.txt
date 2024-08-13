@@ -20,6 +20,7 @@ add_executable(${APP_TARGET}
     ../../../KRAI_library/encoderKRAI/encoderKRAI.cpp
     ../../../KRAI_library/InverseKinematics/Omni4Wheel.cpp
     ../../../KRAI_library/MovingAverage/MovingAverage.cpp
+    ../../../KRAI_library/MiniPID/MiniPID.cpp
 )
 
 target_link_libraries(${APP_TARGET} mbed-os)
