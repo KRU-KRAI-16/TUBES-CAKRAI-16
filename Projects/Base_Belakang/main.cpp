@@ -137,6 +137,10 @@ int main()
     // board manager kirim terus updatenya
     // BM_Belakang.IsAlwaysSend(1);
 
+
+    pid_motor_1.setOutputLimits(-1, 1);
+    pid_motor_2.setOutputLimits(-1, 1);
+
     // --------------------------------------------------------------------------
     
     float pulseThen_BL = enc_motor_1.getPulses();
@@ -146,12 +150,15 @@ int main()
     float rotatePerSec_BR;
     float PWM_motor_BL;
     float PWM_motor_BR;
+    float BR_rps;
+    float BL_rps;
 
 
     while (true)
     {
         // if read can, dia akan set speed untuk motor 1 dan motor 2
         // yang dalam kurung itu dalam milisecond
+        
         
 
         if (BM_Belakang.readCAN(3)){
@@ -163,18 +170,6 @@ int main()
             can_timeout_timer = millis;
         }
 
-        if (millis - lastmillispulse > 10.0f){
-            rotatePerSec_BL = (enc_motor_1.getPulses() - pulseThen_BL)/(PPR*0.01);
-            rotatePerSec_BR = (enc_motor_2.getPulses() - pulseThen_BR)/(PPR*0.01);
-
-            rotatePerSec_BL = movAvg.movingAverage(rotatePerSec_BL);
-            rotatePerSec_BR = movAvg.movingAverage(rotatePerSec_BR);
-
-            pulseThen_BL = enc_motor_1.getPulses();
-            pulseThen_BR = enc_motor_2.getPulses();
-
-            lastmillispulse = millis;    
-        }
         //BM motor 1 = Kiri Kanan
         //BM motor 2 = Maju Mundur
         //integer = Omega
@@ -192,15 +187,35 @@ int main()
         // calculate inverse kinematics untuk dapat speed setiap motor
         Omnibase.InverseCalc();
 
-        BL_speed = Omnibase.getBLSpeed();
-        BR_speed = Omnibase.getBRSpeed();
+        // BL_speed = Omnibase.getBLSpeed();
+        // BR_speed = Omnibase.getBRSpeed();
+
+        BL_rps = Omnibase.getBLSpeedRPS();
+        BR_rps = Omnibase.getBRSpeedRPS();
+
+        if (millis - lastmillispulse > 10.0f){
+            rotatePerSec_BL = (enc_motor_1.getPulses() - pulseThen_BL)/(PPR*0.01);
+            rotatePerSec_BR = (enc_motor_2.getPulses() - pulseThen_BR)/(PPR*0.01);
+
+            rotatePerSec_BL = movAvg.movingAverage(rotatePerSec_BL);
+            rotatePerSec_BR = movAvg.movingAverage(rotatePerSec_BR);
+
+            pulseThen_BL = enc_motor_1.getPulses();
+            pulseThen_BR = enc_motor_2.getPulses();
+
+            PWM_motor_BR = pid_motor_1.getOutput(rotatePerSec_BR, BR_rps);
+            PWM_motor_BL = pid_motor_2.getOutput(rotatePerSec_BL, BL_rps);
+
+            lastmillispulse = millis;    
+        }
+        
 
         // untuk serial print doang
         // printf("Vx = %f, Vy = %f, Omega = %f, BR_speed = %f, BL_speed = %f, BR_RPS = %f, BL_RPS = %f\n", Vx, Vy, Omega, BR_speed, BL_speed, rotatePerSec_BR, rotatePerSec_BL);
 
         // set speed motor 1 dan motor 2 sesuai dengan hasil inverse kinematics
-        motor_1.speed(Omnibase.getBRSpeed());
-        motor_2.speed(Omnibase.getBLSpeed());
+        motor_1.speed(PWM_motor_BR);
+        motor_2.speed(PWM_motor_BL);
     }
     
 

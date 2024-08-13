@@ -155,8 +155,8 @@ int main()
 
         omni4Wheel.InverseCalc();
 
-        FL_speed = omni4Wheel.getFLSpeed();
-        FR_speed = omni4Wheel.getFRSpeed();
+        // FL_speed = omni4Wheel.getFLSpeed();
+        // FR_speed = omni4Wheel.getFRSpeed();
 
         FL_rps = omni4Wheel.getFLSpeedRPS();
         FR_rps = omni4Wheel.getFRSpeedRPS();
