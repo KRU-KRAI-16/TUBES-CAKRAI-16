@@ -30,7 +30,7 @@ FileHandle *mbed::mbed_override_console(int fd) {
 //==============================SETUP CANBUS==========================================
 #define CAN_TX PA_11
 #define CAN_RX PA_12
-#define ID_BM 7
+#define ID_BM 2
 
 int data_timer = 0;
 int can_timeout_timer = 0;
@@ -68,39 +68,29 @@ int main()
     pid.setOutputLimits(-1.0, 1.0);
     float pidOutput;
     float targetPosition = 0.0; // Start at 0 degrees
+    //COBA
+    bool IsGripping = false;
     
     while (true)
     {
-        //////////////////////////////////////////////////////////////////
-        // Update PID every 10 ms
-        // if (millis - last >= 10){
-        //     derajat = ((enc.getPulses() * 360.0f) / PPR); // Calculate current position in degrees
-        //     float pidOutput = pid.getOutput(derajat, targetPosition); // Control to the current target position
-        //     motor.speed(pidOutput); // Set motor speed based on PID output
-        //     last = millis; // Update the last update time
-        // }
 
-        // // Change the target position every 5 seconds
-        // if (millis - lastposition >= 5000){
-        //     if (targetPosition == 0.0){
-        //         targetPosition = 100.0; // Move to 100 degrees
-        //     } else if (targetPosition == 100.0){
-        //         targetPosition = 0.0; // Move back to 0 degrees
-        //     }
-        //     lastposition = millis; // Update the last position change time
-        // }
-
-        //////////////////////////////////////////////
-        //     // control motor speed pake outputpid
-        //     if (millis - last > 5000) {
-        //         float pidOutput = pid.getOutput(currentPosition, 0);
-        //         motor.speed(pidOutput);
-        //         last = millis;
-        //     }
 
         // TERIMA DATA CAN
-        if (BoardModular.readCAN(100)){
-            
+        if (!IsGripping){
+            IsGripping = BoardModular.getSwitch1();
+            if (IsGripping){
+                myServo.position(80);
+                if(millis-lastposition >= 7000){
+                    targetPosition = 100.0; 
+                    if (derajat >= 97.0){
+                    myServo.position(-20);
+                    if (millis - lastposition >= 10000){
+                        targetPosition = 0.0; 
+                        lastposition = millis;
+                        }
+                    }
+                }
+            }
 
         }
         //  -----------------------
@@ -111,20 +101,6 @@ int main()
             last = millis; // waktu
         }
 
-        if (millis - lastposition>= 5000){
-            myServo.position(80);
-            if(millis-lastposition >= 7000){
-                targetPosition = 100.0; 
-                if (derajat >= 97.0){
-                    myServo.position(-20);
-                    if (millis - lastposition >= 10000){
-                        targetPosition = 0.0; 
-                        lastposition = millis;
-                    }
-                }
-            }
-        }
-        printf("derajat = %f \n ", (derajat));
-    }
+        
     return 0;
 }
