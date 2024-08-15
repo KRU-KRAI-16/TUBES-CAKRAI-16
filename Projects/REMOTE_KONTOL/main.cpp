@@ -111,10 +111,17 @@ public:
     }
 };
 
-TimeOutPS3 ForBrake;
-TimeOutPS3 timeOut_L2(200);
+//INISIASI TIMEOUT//
+TimeOutPS3 timeOut_Kanan(200);
 TimeOutPS3 timeOut_Kiri(200);
-float DeltaMAX=0.3;
+TimeOutPS3 timeOut_Atas(200);
+TimeOutPS3 timeOut_Bawah(200);
+TimeOutPS3 timeOut_CCW(200);
+TimeOutPS3 timeOut_CW(200);
+
+
+
+float DeltaMAX  =0.3;
 
 
 float map(float in_min, float in_max, float out_min, float out_max, float input)
@@ -186,13 +193,13 @@ int main()
          // Untuk Kanan
         if(ps3.getLX() > PS3_OFFSET)
         {
-            if(timeOut_L2.checkTimeOut(true, millis)){
+            if(timeOut_Kanan.checkTimeOut(true, millis)){
                     // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
             float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
             // if (deltaVRight>DeltaMAX){
             //     deltaVRight = DeltaMAX;
             // }
-            VX += deltaVRight;
+                VX += deltaVRight;
 
             // timeOut_L2.updateTime(millis);
 
@@ -202,7 +209,7 @@ int main()
         
         }
         else {
-            timeOut_L2.checkTimeOut(false, millis);
+            timeOut_Kanan.checkTimeOut(false, millis);
         }
 
         // Untuk Kiri
@@ -227,67 +234,93 @@ int main()
 
       
         printf("VX = %f \n ", VX);
-        // TEST=0;
-        // // if(ps3.getKotak()){
-        // //     TEST = 1;
-        // // }
-        // // if (stik.getLX())
-        // // {
-        // //     if (timeOut_L2.checkTimeOut(true, millis))
-        // //     {
-        // //         VX = RawAxisL_x +=1;
-                
-                
-        // //     }
-        // // }
-        // // else {
-        // //     timeOut_L2.checkTimeOut(false, millis);
-    
-        // // }
-        // //-----------------------------------------------//
-        // if (stik.getLY())
-        // {
-        //     if (timeOut_L2.checkTimeOut(true, millis))
-        //     {
-            
-        //         VY = RawAxisL_y +=1;
-               
-                
-        //     }
-        // }
-        // else {
-        //     timeOut_L2.checkTimeOut(false, millis);
-    
-        // }
 
-        // //--------------------------------------------//
-        // if (stik.getRX())
-        // {
-        //     if (timeOut_L2.checkTimeOut(true, millis))
-        //     {
-                
+        //Untuk ATAS
+        if(ps3.getLY() > PS3_OFFSET)
+        {
+            if(timeOut_Atas.checkTimeOut(true, millis)){
+            // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
+            // float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
+            float deltaVUP = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLY()));
+
             
-        //         Omega = RawAxisR_x +=1;
-                
-        //     }
-        // }
-        // else {
-        //     timeOut_L2.checkTimeOut(false, millis);
+            VY += deltaVUP;
+
+            
+
+            
+            }
+            
+        
+        }
+        else {
+            timeOut_Atas.checkTimeOut(false, millis);
+        }
+
+
+        //UNTUK BAWAH
+        if(ps3.getLY() < -PS3_OFFSET)
+        {
+            if(timeOut_Bawah.checkTimeOut(true, millis)){
+            float deltaVDown = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLX()));
+            // if(deltaVLeft>DeltaMAX){
+            //     deltaVLeft=DeltaMAX;
+            // }
+            VY += deltaVDown; 
+            
+            }
+            // Mapping LX dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
+          
+           
+        }
+        else {
+            timeOut_Bawah.checkTimeOut(false, millis);
+          
+        }
+
+
     
-        // }
-        // //-----------------------------------------//
-        // if (stik.getR1())
-        // {
-        //     if (timeOut_L2.checkTimeOut(true, millis))
-        //     {
-        //         Isduck = true;
-                
-        //     }
-        // }
-        // else {
-        //     timeOut_L2.checkTimeOut(false, millis);
-        //         Isduck = false;
-        // }
+        
+        //===============untuk ROTASI-================//
+
+        //kayanya CCW DAH
+        if(ps3.getRX() > PS3_OFFSET)
+        {
+            if(timeOut_CCW.checkTimeOut(true, millis)){
+            // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
+            // float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
+            float deltaCCW = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLY()));
+
+            
+            Omega += deltaCCW;
+
+            }
+            
+        
+        }
+        else {
+            timeOut_CCW.checkTimeOut(false, millis);
+        }
+
+        //KAYANYA CW
+        if(ps3.getRX() < -PS3_OFFSET)
+        {
+            if(timeOut_CW.checkTimeOut(true, millis)){
+            float deltaCW = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLX()));
+            // if(deltaVLeft>DeltaMAX){
+            //     deltaVLeft=DeltaMAX;
+            // }
+            Omega += deltaCW; 
+            
+            }
+            // Mapping LX dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
+          
+           
+        }
+        else {
+            timeOut_CW.checkTimeOut(false, millis);
+          
+        }
  
 
 
