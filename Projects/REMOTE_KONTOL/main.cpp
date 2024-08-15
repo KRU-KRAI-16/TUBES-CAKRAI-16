@@ -69,15 +69,7 @@ CAN can(PA_11, PA_12, 500000); //Cek lagi pin Transmit Receive di Board 1
 
 
 
-BMAktuatorKRAI sender (ID_BM_BASE, &millis);
-
-
- 
-
-
-
-
-
+BMAktuatorKRAI sender(ID_BM_BASE, &millis);
 
 // Definisikan Lamanya Menerima dan kirim data
 #define TS_READ_CAN     2   // 
@@ -176,7 +168,7 @@ int main()
         
         //=============================CAN BUS COMM==========================//
         sender.sendCAN(sender.getNoBM(),5);
-        printf("VX: %i , VY: %i , Omega: %i", VX, VY, Omega);
+        printf("VX: %d , VY: %d , Omega: %d \n", VX, VY, Omega);
        
         //============================USER CODE==================================
         
