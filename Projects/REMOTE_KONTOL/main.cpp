@@ -8,12 +8,12 @@
  */
 
 #include "mbed.h"
-#include "../../KRAI_library/KRAI_library/Pinout/BoardManagerV1.h"
-#include "../../KRAI_library/KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+#include "../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
 #include "../../KRAI_library/Motor/Motor.h"
 #include "../../KRAI_library/encoderKRAI/encoderKRAI.h"
-#include "../../KRAI_library/KRAI_library/JoystickPS3/JoystickPS3.h"
-#include "../../KRAI_library/KRAI_library/JoystickPS3/MappingJoystick.h"
+#include "../../KRAI_library/JoystickPS3/JoystickPS3.h"
+#include "../../KRAI_library/JoystickPS3/MappingJoystick.h"
 
 #define PWM BMV1_PWM_MOTOR_1
 #define FOR BMV1_FOR_MOTOR_1
@@ -112,8 +112,10 @@ public:
 };
 
 TimeOutPS3 ForBrake;
-TimeOutPS3 timeOut_L2(1000);
-TimeOutPS3 timeOut_Kiri(1000);
+TimeOutPS3 timeOut_L2(0);
+TimeOutPS3 timeOut_Kiri(0);
+float DeltaMAX=0.3;
+
 
 float map(float in_min, float in_max, float out_min, float out_max, float input)
 {
@@ -155,6 +157,7 @@ int main()
 
     int PS3_OFFSET = 20;
     int SPEED_MS_XY = 2;
+    
 
     while (true)
     {
@@ -186,13 +189,19 @@ int main()
             if(timeOut_L2.checkTimeOut(true, millis)){
                     // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
             float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
+            // if (deltaVRight>DeltaMAX){
+            //     deltaVRight = DeltaMAX;
+            // }
             VX += deltaVRight;
+            tempVX = VX;
+
+            printf("Delta = %f \n ", deltaVRight);
             }
             
         
         }
-        else{
-            timeOut_L2.checkTimeOut(false, millis);
+        else {
+            timeOut_L2.checkTimeOut(true, millis);
         }
 
         // Untuk Kiri
@@ -200,17 +209,23 @@ int main()
         {
             if(timeOut_Kiri.checkTimeOut(true, millis)){
             float deltaVLeft = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLX()));
+            // if(deltaVLeft>DeltaMAX){
+            //     deltaVLeft=DeltaMAX;
+            // }
             VX += deltaVLeft; 
+            
             }
             // Mapping LX dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
           
            
         }
-
-        else{
-            timeOut_Kiri.checkTimeOut(false, millis);
+        else {
+            timeOut_Kiri.checkTimeOut(true, millis);
+          
         }
-         printf("VX = %f \n ", VX);
+
+      
+        printf("VX = %f \n ", VX);
         // TEST=0;
         // // if(ps3.getKotak()){
         // //     TEST = 1;
@@ -303,7 +318,7 @@ int main()
 
         // }
         
-    //    printf("vx: %f, vy: %f, omega: %f, Kotak: %d\n", VX, VY, Omega, stik.getKotak());
+        // printf("vx: %f, vy: %f, omega: %f, Kotak: %d\n", VX, VY, Omega, stik.getKotak());
 
         //=====================================Code gripper=======================//
         //if (stik.getKotak()){
