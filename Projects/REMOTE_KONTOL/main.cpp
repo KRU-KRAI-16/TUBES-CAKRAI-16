@@ -235,7 +235,7 @@ int main()
         }
 
       
-        printf("VX = %f \n ", VX);
+        
 
         //Untuk ATAS
         if(ps3.getLY() > PS3_OFFSET)
