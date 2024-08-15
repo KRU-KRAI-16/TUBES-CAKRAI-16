@@ -164,6 +164,8 @@ int main()
 
     int PS3_OFFSET = 20;
     int SPEED_MS_XY = 2;
+    int SPEED_LIMIT_SLOW = 1;
+    int SPEED_LIMIT_FAST = 2;
     
 
     while (true)
@@ -262,7 +264,7 @@ int main()
         if(ps3.getLY() < -PS3_OFFSET)
         {
             if(timeOut_Bawah.checkTimeOut(true, millis)){
-            float deltaVDown = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLX()));
+            float deltaVDown = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLY()));
             // if(deltaVLeft>DeltaMAX){
             //     deltaVLeft=DeltaMAX;
             // }
@@ -289,7 +291,7 @@ int main()
             if(timeOut_CCW.checkTimeOut(true, millis)){
             // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
             // float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
-            float deltaCCW = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLY()));
+            float deltaCCW = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getRX()));
 
             
             Omega += deltaCCW;
@@ -306,7 +308,7 @@ int main()
         if(ps3.getRX() < -PS3_OFFSET)
         {
             if(timeOut_CW.checkTimeOut(true, millis)){
-            float deltaCW = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLX()));
+            float deltaCW = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getRX()));
             // if(deltaVLeft>DeltaMAX){
             //     deltaVLeft=DeltaMAX;
             // }
