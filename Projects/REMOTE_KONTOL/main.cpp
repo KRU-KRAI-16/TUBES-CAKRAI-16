@@ -9,8 +9,8 @@
 
 #include "mbed.h"
 #include "../../KRAI_library/Pinout/BoardManagerV1.h"
-#include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
 #include "../../KRAI_library/Motor/Motor.h"
+#include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
 #include "../../KRAI_library/encoderKRAI/encoderKRAI.h"
 #include "../../KRAI_library/JoystickPS3/JoystickPS3.h"
 #include "../../KRAI_library/JoystickPS3/MappingJoystick.h"
@@ -90,7 +90,7 @@ class TimeOutPS3
 private:
     uint32_t prevTime = 0;
     uint32_t tempIntegral = 0;
-    uint32_t durasiIgnore = 200; // ms
+    uint32_t durasiIgnore = 300; // ms
 public:
     TimeOutPS3() = default;
     TimeOutPS3(uint32_t durasiIgn) : durasiIgnore(durasiIgn) {}
@@ -112,8 +112,8 @@ public:
 };
 
 TimeOutPS3 ForBrake;
-TimeOutPS3 timeOut_L2(0);
-TimeOutPS3 timeOut_Kiri(0);
+TimeOutPS3 timeOut_L2(200);
+TimeOutPS3 timeOut_Kiri(200);
 float DeltaMAX=0.3;
 
 
@@ -193,7 +193,8 @@ int main()
             //     deltaVRight = DeltaMAX;
             // }
             VX += deltaVRight;
-            tempVX = VX;
+
+            // timeOut_L2.updateTime(millis);
 
             printf("Delta = %f \n ", deltaVRight);
             }
@@ -201,7 +202,7 @@ int main()
         
         }
         else {
-            timeOut_L2.checkTimeOut(true, millis);
+            timeOut_L2.checkTimeOut(false, millis);
         }
 
         // Untuk Kiri
@@ -220,7 +221,7 @@ int main()
            
         }
         else {
-            timeOut_Kiri.checkTimeOut(true, millis);
+            timeOut_Kiri.checkTimeOut(false, millis);
           
         }
 
