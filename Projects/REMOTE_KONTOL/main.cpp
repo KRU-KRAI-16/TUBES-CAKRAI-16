@@ -73,7 +73,28 @@ BMAktuatorKRAI sender (ID_BM_BASE, &millis);
 BMAktuatorKRAI gripper (ID_BM_GRIPPER, &millis);
 
  
+//============================BISMILLAH NO GETER GETER===========================//
+#define DELTA_MAX 0.3  // Adjust this value as needed
 
+// Variables to store the previous motor speeds
+float prevVx = 0;
+float prevVy = 0;
+float prevOmega = 0;
+
+// Function to limit the rate of change
+float limitRateOfChange(float currentValue, float targetValue, float deltaMax) {
+    float delta = targetValue - currentValue;
+
+    if (delta > deltaMax) {
+        currentValue += deltaMax;
+    } else if (delta < -deltaMax) {
+        currentValue -= deltaMax;
+    } else {
+        currentValue = targetValue;
+    }
+
+    return currentValue;
+}
 
 
 
@@ -142,9 +163,9 @@ int main()
 
     float RawAxisL_x, RawAxisL_y;
     float RawAxisR_x;
-    float VX;
-    float VY;
-    int Omega;
+    float vx;
+    float vy;
+    int omega;
 
 
     int timedelay = 500;
@@ -166,6 +187,7 @@ int main()
     int SPEED_MS_XY = 2;
     int SPEED_LIMIT_SLOW = 1;
     int SPEED_LIMIT_FAST = 2;
+    int SPEED_MS_OMEGA = 2;
     
 
     while (true)
@@ -178,9 +200,7 @@ int main()
      
 
        //==============================INPUT GETTER=========================================/
-        VX = 0;
-        VY = 0;
-        Omega = 0;
+        
         //==========================================INPUT NO  JITTER==========================//
         isDebugPS3 = false;
         if (isDebugPS3)
@@ -192,136 +212,95 @@ int main()
             printf("Start : %d Select : %d\n", ps3.getStart(), ps3.getSelect());
         }
 
-         // Untuk Kanan
+        //==========================================UNTUK PERGERAKAN BASE=================================//
+       //Reset Value
+        vx = 0;
+        vy = 0;
+        omega = 0;
+    
+        
+        // Untuk Kanan
         if(ps3.getLX() > PS3_OFFSET)
         {
-            if(timeOut_Kanan.checkTimeOut(true, millis)){
-                    // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
+            // r0 = FOR_REV_STATE;
+           
+            // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
             float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
-            // if (deltaVRight>DeltaMAX){
-            //     deltaVRight = DeltaMAX;
-            // }
-                VX += deltaVRight;
-
-            // timeOut_L2.updateTime(millis);
-
-            printf("Delta = %f \n ", deltaVRight);
-            }
-            
-        
-        }
-        else {
-            timeOut_Kanan.checkTimeOut(false, millis);
+            vy += deltaVRight;
         }
 
         // Untuk Kiri
         if(ps3.getLX() < -PS3_OFFSET)
         {
-            if(timeOut_Kiri.checkTimeOut(true, millis)){
-            float deltaVLeft = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLX()));
-            // if(deltaVLeft>DeltaMAX){
-            //     deltaVLeft=DeltaMAX;
-            // }
-            VX += deltaVLeft; 
-            
-            }
-            // Mapping LX dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
-          
-           
-        }
-        else {
-            timeOut_Kiri.checkTimeOut(false, millis);
-          
-        }
-
-      
-        
-
-        //Untuk ATAS
-        if(ps3.getLY() > PS3_OFFSET)
-        {
-            if(timeOut_Atas.checkTimeOut(true, millis)){
-            // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
-            // float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
-            float deltaVUP = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLY()));
-
-            
-            VY += deltaVUP;
-
-            
-
-            
-            }
-            
-        
-        }
-        else {
-            timeOut_Atas.checkTimeOut(false, millis);
-        }
-
-
-        //UNTUK BAWAH
-        if(ps3.getLY() < -PS3_OFFSET)
-        {
-            if(timeOut_Bawah.checkTimeOut(true, millis)){
-            float deltaVDown = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLY()));
-            // if(deltaVLeft>DeltaMAX){
-            //     deltaVLeft=DeltaMAX;
-            // }
-            VY += deltaVDown; 
-            
-            }
-            // Mapping LX dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
-          
-           
-        }
-        else {
-            timeOut_Bawah.checkTimeOut(false, millis);
-          
-        }
-
-
+            // r0 = FOR_REV_STATE;
     
-        
-        //===============untuk ROTASI-================//
-
-        //kayanya CCW DAH
-        if(ps3.getRX() > PS3_OFFSET)
-        {
-            if(timeOut_CCW.checkTimeOut(true, millis)){
-            // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
-            // float deltaVRight = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getLX()));
-            float deltaCCW = (map(PS3_OFFSET, 128.0, 0, -(SPEED_MS_XY  * 0.5), ps3.getRX()));
-
-            
-            Omega += deltaCCW;
-
-            }
-            
-        
-        }
-        else {
-            timeOut_CCW.checkTimeOut(false, millis);
-        }
-
-        //KAYANYA CW
-        if(ps3.getRX() < -PS3_OFFSET)
-        {
-            if(timeOut_CW.checkTimeOut(true, millis)){
-            float deltaCW = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getRX()));
-            // if(deltaVLeft>DeltaMAX){
-            //     deltaVLeft=DeltaMAX;
-            // }
-            Omega += deltaCW; 
-            
-            }
             // Mapping LX dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
-          
-           
+            float deltaVLeft = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLX()));
+            vy += deltaVLeft;
         }
-        else {
-            timeOut_CW.checkTimeOut(false, millis);
-          
+
+        // Maju (adalah -80)
+        if (ps3.getLY() < -PS3_OFFSET)
+        {
+            // r0 = FOR_REV_STATE;
+            
+            // Mapping LY dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
+            float deltaVFor = (map(-PS3_OFFSET, -128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLY()));
+            vx += deltaVFor;
+        }
+
+        // Mundur
+        if (ps3.getLY() > PS3_OFFSET)
+        {
+            // r0 = FOR_REV_STATE;
+        
+            // Mapping LY dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
+            float deltaVRev = (map(PS3_OFFSET, 128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLY()));
+            vx -= deltaVRev;
+        }
+
+
+        // For ROTATE
+        if (ps3.getRX() != 0)
+        {
+
+            // r0 = IS_ROTATE_STATE;
+        
+
+            // Mapping RX dari -128 sampai 128 menjadi dalam rad/s rentang -5 sampai 5
+            // float deltaVRot = (map(-128.0, 128.0, SPEED_MS_OMEGA, -SPEED_MS_OMEGA, ps3.getRX()));
+
+            // Mapping RX dari -128 sampai -30 menjadi dalam rad/s rentang SPEED_MS_OMEGA sampai 0
+            // Mapping RX dari 30 sampai 128 menjadi dalam rad/s rentang 0 sampai -SPEED_MS_OMEGA
+            // Diantara -30 sampai 30 menjadi 0
+            float deltaVRot = 0;
+            if (ps3.getRX() > PS3_OFFSET)
+            {
+                deltaVRot = (map(PS3_OFFSET, 128.0, 0, -SPEED_MS_OMEGA, ps3.getRX()));
+            }
+            else if (ps3.getRX() < -PS3_OFFSET)
+            {
+                deltaVRot = (map(-128.0, -PS3_OFFSET, SPEED_MS_OMEGA, 0, ps3.getRX()));
+            }
+            else
+            {
+                deltaVRot = 0;
+            }
+            omega = deltaVRot;
+
+            // if (deltaVRot < 0.2 && deltaVRot > -0.2)
+            // {
+            //     deltaVRot = 0;
+            // }
+            // if (vx != 0 || vy != 0)
+            // {
+            //     omega += deltaVRot * SPEED_MULTIPLIER_SLOW;
+            // }
+            // else
+            // {
+            //     omega += deltaVRot * 0.3;
+            // }
+            
         }
  
 
@@ -363,11 +342,16 @@ int main()
 
         
         /////////////////////////////////////////////////
-        sender.setMotor1(VX ); //BESOK BENERIN
-        sender.setMotor2(VY);
-        sender.setInteger(Omega);
-        
-        //gripper.setSwitch1(ToGrip);
+        prevVx = limitRateOfChange(prevVx, vx, DELTA_MAX);
+        prevVy = limitRateOfChange(prevVy, vy, DELTA_MAX);
+        prevOmega = limitRateOfChange(prevOmega, omega, DELTA_MAX);
+
+        // Set the motor speeds
+        sender.setMotor1(prevVx);
+        sender.setMotor2(prevVy);
+        sender.setInteger(prevOmega);
+
+          
         
         
         //=============================CAN BUS COMM==========================//
