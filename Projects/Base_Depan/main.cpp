@@ -99,8 +99,7 @@ BMAktuatorKRAI BM_Base(ID_BM_BASE, &millis);
 
 #define SPEED_CONST 2.0f
 #define OMEGA_CONST 0.5f
-#define ANALOG_SCALE_MOVE 256.0f
-#define ANALOG_SCALE_ROTATE 64.0f
+#define ANALOG_SCALE 1000.0f
 unsigned long* millisPtr;
 Omni4Wheel omni4Wheel(millisPtr, 0.395, 0.15);
 
@@ -146,9 +145,9 @@ int main()
 
             can_timeout_timer = millis;
         }
-        vx = (static_cast<float>(BM_Base.getMotor1())) * SPEED_CONST;
-        vy = -(static_cast<float>(BM_Base.getMotor2())) * SPEED_CONST;
-        omega = -(static_cast<float>(BM_Base.getInteger())) * OMEGA_CONST;
+        vx = (static_cast<float>(BM_Base.getMotor1())/ANALOG_SCALE);
+        vy = (static_cast<float>(BM_Base.getMotor2())/ANALOG_SCALE);
+        omega = (static_cast<float>(BM_Base.getInteger())/ANALOG_SCALE);
         
         omni4Wheel.setVx(vx);
         omni4Wheel.setVy(vy);
@@ -187,9 +186,11 @@ int main()
         // printf("vx: %f, vy: %f, omega: %f, FL_speed = %f, FR_speed = %f, FL_RPS = %f, FR_RPS = %f\n", vx, vy, omega, FL_speed, FR_speed, rotatePerSec_FL, rotatePerSec_FR);
         // printf("FL_setpoint = %f, FR_setpoint = %f, FL_omega = %f, FR_omega = %f\n", FL_rps, FR_rps, rotatePerSec_FL, rotatePerSec_FR);
         // printf("FL_PWM = %f, FL_setpoint = %f, FL_omega = %f\n", PWM_motor_FL, FL_rps, rotatePerSec_FL);
-        printf("FL_omega = %f, FR_omega = %f ", rotatePerSec_FL, rotatePerSec_FR);
-        printf("L_setpoint = %f, FR_setpoint = %f \n", FL_setpoint, FR_setpoint);   
+        // printf("FL_omega = %f, FR_omega = %f ", rotatePerSec_FL, rotatePerSec_FR);
+        // printf("L_setpoint = %f, FR_setpoint = %f \n", FL_setpoint, FR_setpoint);   
         
+       // printf("Input Vx = %f, Vy = %f, Omega = %f\n", BM_Base.getMotor1(), BM_Base.getMotor2(), BM_Base.getInteger());
+
         motor_FL.speed(PWM_motor_FL);
         motor_FR.speed(PWM_motor_FR);
 

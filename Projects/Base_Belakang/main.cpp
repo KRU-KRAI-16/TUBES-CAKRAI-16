@@ -125,8 +125,7 @@ float BR_speed, BL_speed;
 
 #define CONSTSPEED 2.0f
 #define CONSTOMEGA 0.5f
-#define ANALOG_SCALE_MOVE 256.0f
-#define ANALOG_SCALE_ROTATE 64.0f
+#define ANALOG_SCALE 1000.0f
 
 // =====================================================================================
 
@@ -178,9 +177,9 @@ int main()
         //integer = Omega
         
         // menerima data RC dari CAN untuk diubah jadi data kecepatan m/s
-        Vx = (static_cast<float>(BM_Belakang.getMotor1()))*CONSTSPEED;
-        Vy = -(static_cast<float>(BM_Belakang.getMotor2()))*CONSTSPEED;
-        Omega = -(static_cast<float>(BM_Belakang.getInteger()))*CONSTOMEGA;
+        Vx = (static_cast<float>(BM_Belakang.getMotor1())/ANALOG_SCALE);
+        Vy = (static_cast<float>(BM_Belakang.getMotor2())/ANALOG_SCALE);
+        Omega = (static_cast<float>(BM_Belakang.getInteger())/ANALOG_SCALE);
         
         // set vx, vy, omega untuk ke omnibase
         Omnibase.setVx(Vx);
@@ -216,8 +215,8 @@ int main()
         // printf("Vx = %f, Vy = %f, Omega = %f, BR_speed = %f, BL_speed = %f, BR_RPS = %f, BL_RPS = %f\n", Vx, Vy, Omega, BR_speed, BL_speed, rotatePerSec_BR, rotatePerSec_BL);
 
         // set speed motor 1 dan motor 2 sesuai dengan hasil inverse kinematics
-        printf("BL_omega = %f, BR_omega = %f ", rotatePerSec_BL, rotatePerSec_BR);
-        printf("BL_setpoint = %f, BR_setpoint = %f \n", BL_setpoint, BR_setpoint);
+        // printf("BL_omega = %f, BR_omega = %f ", rotatePerSec_BL, rotatePerSec_BR);
+        // printf("BL_setpoint = %f, BR_setpoint = %f \n", BL_setpoint, BR_setpoint);
 
         motor_1.speed(PWM_motor_BR);
         motor_2.speed(PWM_motor_BL);
