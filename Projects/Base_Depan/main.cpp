@@ -32,10 +32,11 @@
 Motor motor_FL(PWM_FL, FOR_FL , REV_FL);
 Motor motor_FR(PWM_FR, FOR_FR , REV_FR);
 
-encoderKRAI encoder_FL(CHA_FL , CHB_FL , PPR , Encoding::X4_ENCODING);
+encoderKRAI encoder_FL(CHB_FL , CHA_FL , PPR , Encoding::X4_ENCODING);
 encoderKRAI encoder_FR(CHA_FR , CHB_FR , PPR , Encoding::X4_ENCODING);
 
-MovingAverage movAvg(10);
+MovingAverage movAvgFL(10);
+MovingAverage movAvgFR(10);
 
 //PID params
 double Kp = 0.10f;
@@ -96,10 +97,9 @@ BMAktuatorKRAI BM_Base(ID_BM_BASE, &millis);
 
 //============================== SETUP INVERSE KINEMATICS =============================
 
-#define SPEED_CONST 1.0f
+#define SPEED_CONST 2.0f
 #define OMEGA_CONST 0.5f
-#define ANALOG_SCALE_MOVE 256.0f
-#define ANALOG_SCALE_ROTATE 64.0f
+#define ANALOG_SCALE 1000.0f
 unsigned long* millisPtr;
 Omni4Wheel omni4Wheel(millisPtr, 0.395, 0.15);
 
@@ -117,7 +117,7 @@ int main()
     //inverse kinematics
     float vx, vy, omega;
     float FL_speed, FR_speed;
-    float FL_rps, FR_rps;
+    float FL_setpoint, FR_setpoint;
 
     //hitung kecepatan masing - masing roda
     float pulseThen_FL = encoder_FL.getPulses();
@@ -145,9 +145,9 @@ int main()
 
             can_timeout_timer = millis;
         }
-        vx = (static_cast<float>(BM_Base.getMotor1())/ANALOG_SCALE_MOVE) * SPEED_CONST;
-        vy = -(static_cast<float>(BM_Base.getMotor2())/ANALOG_SCALE_MOVE) * SPEED_CONST;
-        omega = -(static_cast<float>(BM_Base.getInteger())/ANALOG_SCALE_ROTATE) * OMEGA_CONST;
+        vx = (static_cast<float>(BM_Base.getMotor1())/ANALOG_SCALE);
+        vy = (static_cast<float>(BM_Base.getMotor2())/ANALOG_SCALE);
+        omega = (static_cast<float>(BM_Base.getInteger())/ANALOG_SCALE);
         
         omni4Wheel.setVx(vx);
         omni4Wheel.setVy(vy);
@@ -158,23 +158,24 @@ int main()
         // FL_speed = omni4Wheel.getFLSpeed();
         // FR_speed = omni4Wheel.getFRSpeed();
 
-        FL_rps = omni4Wheel.getFLSpeedRPS();
-        FR_rps = omni4Wheel.getFRSpeedRPS();
+        FL_setpoint = omni4Wheel.getFLSpeedRPS();
+        FR_setpoint = omni4Wheel.getFRSpeedRPS();
 
         if (millis - lastmillispulse > 10.0f){
+            lastmillispulse = millis;
             rotatePerSec_FL = (encoder_FL.getPulses() - pulseThen_FL)/(PPR*0.01);
             rotatePerSec_FR = (encoder_FR.getPulses() - pulseThen_FR)/(PPR*0.01);
 
-            rotatePerSec_FL = movAvg.movingAverage(rotatePerSec_FL);
-            rotatePerSec_FR = movAvg.movingAverage(rotatePerSec_FR);
+            rotatePerSec_FL = movAvgFL.movingAverage(rotatePerSec_FL);
+            rotatePerSec_FR = movAvgFR.movingAverage(rotatePerSec_FR);
 
             pulseThen_FL = encoder_FL.getPulses();
             pulseThen_FR = encoder_FR.getPulses();
             
-            PWM_motor_FL = pid_FL.getOutput(rotatePerSec_FL, FL_rps);
-            PWM_motor_FR = pid_FR.getOutput(rotatePerSec_FR, FR_rps);
+            PWM_motor_FL = pid_FL.getOutput(rotatePerSec_FL, FL_setpoint);
+            PWM_motor_FR = pid_FR.getOutput(rotatePerSec_FR, FR_setpoint);
 
-            lastmillispulse = millis;
+           
         }
 
 
@@ -184,8 +185,11 @@ int main()
 
         // printf("vx: %f, vy: %f, omega: %f, FL_speed = %f, FR_speed = %f, FL_RPS = %f, FR_RPS = %f\n", vx, vy, omega, FL_speed, FR_speed, rotatePerSec_FL, rotatePerSec_FR);
         // printf("FL_setpoint = %f, FR_setpoint = %f, FL_omega = %f, FR_omega = %f\n", FL_rps, FR_rps, rotatePerSec_FL, rotatePerSec_FR);
-        // printf("FL_PWM = %f, FL_setpoint = %f, FL_omega = %f\n", PWM_motor_FL, FL_rps, rotatePerSec_FL);   
+        // printf("FL_PWM = %f, FL_setpoint = %f, FL_omega = %f\n", PWM_motor_FL, FL_rps, rotatePerSec_FL);
+        // printf("FL_omega = %f, FR_omega = %f ", rotatePerSec_FL, rotatePerSec_FR);
+        // printf("L_setpoint = %f, FR_setpoint = %f \n", FL_setpoint, FR_setpoint);   
         
+       // printf("Input Vx = %f, Vy = %f, Omega = %f\n", BM_Base.getMotor1(), BM_Base.getMotor2(), BM_Base.getInteger());
 
         motor_FL.speed(PWM_motor_FL);
         motor_FR.speed(PWM_motor_FR);
