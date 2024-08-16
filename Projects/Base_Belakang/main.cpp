@@ -44,12 +44,13 @@ DigitalOut led(PC_13);
 // =================SETUP MOTOR / CREATE OBJECT MOTOR===============================
 //Motor_1 belakang kanan (BR)
 Motor motor_1(PWM1, FOR1, REV1);
-encoderKRAI enc_motor_1(CHA1, CHB1, PPR, Encoding::X4_ENCODING);
+encoderKRAI enc_motor_1(CHB1, CHA1, PPR, Encoding::X4_ENCODING);
 
 //Motor_2 belakang kiri (BL)
 Motor motor_2(PWM2, FOR2, REV2);
-encoderKRAI enc_motor_2(CHA2, CHB2, PPR, Encoding::X4_ENCODING);
-MovingAverage movAvg(10);
+encoderKRAI enc_motor_2(CHB2, CHA2, PPR, Encoding::X4_ENCODING);
+MovingAverage movAvg1(10);
+MovingAverage movAvg2(10);
 
 //PID params
 double Kp = 0.10f;
@@ -76,10 +77,12 @@ FileHandle *mbed::mbed_override_console(int fd) {
 // timer pake variabel millis
 Ticker ms_tick;
 uint32_t millis = 0;
+uint32_t millis2 = 0;
 void onMillisecondTicker(void)
 {
     // this code will run every millisecond
     millis++;
+    millis2++;
     
 }
 
@@ -120,7 +123,7 @@ Omni4Wheel Omnibase(&millis, DfromCenter, Diameter);
 float Vx, Vy, Omega;
 float BR_speed, BL_speed;
 
-#define CONSTSPEED 1.0f
+#define CONSTSPEED 2.0f
 #define CONSTOMEGA 0.5f
 #define ANALOG_SCALE_MOVE 256.0f
 #define ANALOG_SCALE_ROTATE 64.0f
@@ -150,8 +153,8 @@ int main()
     float rotatePerSec_BR;
     float PWM_motor_BL;
     float PWM_motor_BR;
-    float BR_rps;
-    float BL_rps;
+    float BR_setpoint;
+    float BL_setpoint;
 
 
     while (true)
@@ -175,9 +178,9 @@ int main()
         //integer = Omega
         
         // menerima data RC dari CAN untuk diubah jadi data kecepatan m/s
-        Vx = (static_cast<float>(BM_Belakang.getMotor1()) / ANALOG_SCALE_MOVE)*CONSTSPEED;
-        Vy = -(static_cast<float>(BM_Belakang.getMotor2()) / ANALOG_SCALE_MOVE)*CONSTSPEED;
-        Omega = -(static_cast<float>(BM_Belakang.getInteger()) / ANALOG_SCALE_ROTATE)*CONSTOMEGA;
+        Vx = (static_cast<float>(BM_Belakang.getMotor1()))*CONSTSPEED;
+        Vy = -(static_cast<float>(BM_Belakang.getMotor2()))*CONSTSPEED;
+        Omega = -(static_cast<float>(BM_Belakang.getInteger()))*CONSTOMEGA;
         
         // set vx, vy, omega untuk ke omnibase
         Omnibase.setVx(Vx);
@@ -190,23 +193,22 @@ int main()
         // BL_speed = Omnibase.getBLSpeed();
         // BR_speed = Omnibase.getBRSpeed();
 
-        BL_rps = Omnibase.getBLSpeedRPS();
-        BR_rps = Omnibase.getBRSpeedRPS();
+        BL_setpoint = Omnibase.getBLSpeedRPS();
+        BR_setpoint = Omnibase.getBRSpeedRPS();
 
         if (millis - lastmillispulse > 10.0f){
-            rotatePerSec_BL = (enc_motor_1.getPulses() - pulseThen_BL)/(PPR*0.01);
-            rotatePerSec_BR = (enc_motor_2.getPulses() - pulseThen_BR)/(PPR*0.01);
+            lastmillispulse = millis;
+            rotatePerSec_BL = (enc_motor_2.getPulses() - pulseThen_BL)/(PPR*0.01);
+            rotatePerSec_BR = (enc_motor_1.getPulses() - pulseThen_BR)/(PPR*0.01);
 
-            rotatePerSec_BL = movAvg.movingAverage(rotatePerSec_BL);
-            rotatePerSec_BR = movAvg.movingAverage(rotatePerSec_BR);
+            rotatePerSec_BL = movAvg1.movingAverage(rotatePerSec_BL);
+            rotatePerSec_BR = movAvg2.movingAverage(rotatePerSec_BR);
 
-            pulseThen_BL = enc_motor_1.getPulses();
-            pulseThen_BR = enc_motor_2.getPulses();
+            pulseThen_BL = enc_motor_2.getPulses();
+            pulseThen_BR = enc_motor_1.getPulses();
 
-            PWM_motor_BR = pid_motor_1.getOutput(rotatePerSec_BR, BR_rps);
-            PWM_motor_BL = pid_motor_2.getOutput(rotatePerSec_BL, BL_rps);
-
-            lastmillispulse = millis;    
+            PWM_motor_BR = pid_motor_1.getOutput(rotatePerSec_BR, BR_setpoint);
+            PWM_motor_BL = pid_motor_2.getOutput(rotatePerSec_BL, BL_setpoint);
         }
         
 
@@ -214,8 +216,12 @@ int main()
         // printf("Vx = %f, Vy = %f, Omega = %f, BR_speed = %f, BL_speed = %f, BR_RPS = %f, BL_RPS = %f\n", Vx, Vy, Omega, BR_speed, BL_speed, rotatePerSec_BR, rotatePerSec_BL);
 
         // set speed motor 1 dan motor 2 sesuai dengan hasil inverse kinematics
+        printf("BL_omega = %f, BR_omega = %f ", rotatePerSec_BL, rotatePerSec_BR);
+        printf("BL_setpoint = %f, BR_setpoint = %f \n", BL_setpoint, BR_setpoint);
+
         motor_1.speed(PWM_motor_BR);
         motor_2.speed(PWM_motor_BL);
+        
     }
     
 

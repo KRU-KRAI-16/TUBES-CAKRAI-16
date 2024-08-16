@@ -351,8 +351,7 @@ int main()
         sender.setMotor2(prevVy);
         sender.setInteger(prevOmega);
 
-          
-        
+        printf("Vx = %f, Vy = %f, Omega = %d\n", prevVx, prevVy, prevOmega);
         
         //=============================CAN BUS COMM==========================//
     
