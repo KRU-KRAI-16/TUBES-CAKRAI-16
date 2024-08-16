@@ -4,7 +4,7 @@
 #include "../../KRAI_library/encoderKRAI/encoderKRAI.h"
 #include "../../KRAI_library/KRAI_library/MiniPID/MiniPID.h"
 #include "../../KRAI_library/servoKRAI/servoKRAI.h"
-#include ".../../KRAI_library/KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+// #include ".../../KRAI_library/KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
 
 //============================SETUP BASIC TIMER======================================
 Ticker ms_tick;
@@ -27,7 +27,7 @@ FileHandle *mbed::mbed_override_console(int fd) {
 }
 //-----------------------------------------------------------------------------------
 
-//==============================SETUP CANBUS==========================================
+// //==============================SETUP CANBUS==========================================
 #define CAN_TX PA_11
 #define CAN_RX PA_12
 #define ID_BM 2
@@ -36,12 +36,15 @@ int data_timer = 0;
 int can_timeout_timer = 0;
 CAN can(PA_11, PA_12, 500000);
 
-BMAktuatorKRAI BoardModular(ID_BM, &millis);
+bool ISGRIPPING = false;
+
+BMAktuatorKRAI BoardModular(ID_
+  BM, &millis);
 
 // Definisikan Lamanya Menerima data
 #define TS_READ_CAN     2   // 
 #define TS_SEND_CAN     5   // 
-//-----------------------------------------------------------------------------------
+// //-----------------------------------------------------------------------------------
 
 // ENCODER
 #define PPR 10332.0f
@@ -51,6 +54,37 @@ MiniPID pid(0.06, 0, 0);
 uint32_t last = 0; 
 uint32_t lastposition = 0;
  
+ //==================================SETUP TIMEOUT=========================//
+ class TimeOutGRIPPER
+{
+private:
+    uint32_t prevTime = 0;
+    uint32_t tempIntegral = 0;
+    uint32_t durasiIgnore = 200; // ms
+public:
+    TimeOutPS3() = default;
+    TimeOutPS3(uint32_t durasiIgn) : durasiIgnore(durasiIgn) {}
+    void updateTime(uint32_t time) { this->prevTime = time; }
+    bool checkTimeOut(bool run, uint32_t timeNow) {
+        if (run == false) {
+            this->tempIntegral = 0;
+            this->prevTime = timeNow;
+            return false;
+        }
+        else {
+            this->tempIntegral +=  (timeNow - this->prevTime);
+            if (this->tempIntegral > this->durasiIgnore) {
+                return true;
+            }
+            return false;
+        }
+    }
+};
+
+TimeOutGRIPPER ForGrip(3000);
+
+
+
 int main()
 {
     //TIMER
@@ -68,39 +102,52 @@ int main()
     pid.setOutputLimits(-1.0, 1.0);
     float pidOutput;
     float targetPosition = 0.0; // Start at 0 degrees
-    //COBA
-    bool IsGripping = false;
+
+    //CAN
+    // bool CANmessage = false;
+
+    //================================
+
     
     while (true)
     {
+        // TERIMA DATA CAN SETIAP 100 ms
+        // if (BoardModular.readCAN(100)){
+        //     CANmessage = true;
+        
+        if(!ISGRIPPING){
+            ISGRIPPING+
+        }
 
-
-        // TERIMA DATA CAN
-        if (!IsGripping){
-            IsGripping = BoardModular.getSwitch1();
-            if (IsGripping){
-                myServo.position(80);
-                if(millis-lastposition >= 7000){
-                    targetPosition = 100.0; 
-                    if (derajat >= 97.0){
+        // SEQUENCE
+        // if(CANmessage){
+        if (millis - lastposition >= 3000){
+            myServo.position(80);
+            if(millis-lastposition >= 4000){
+                targetPosition = 100.0; 
+                if (millis - lastposition >= 6000){
                     myServo.position(-20);
-                    if (millis - lastposition >= 10000){
+                    if (millis - lastposition >= 7000){
                         targetPosition = 0.0; 
-                        lastposition = millis;
+                        if (millis - lastposition >= 8500){
+                            lastposition = millis;
+
                         }
+                        // CANmessage = false;
                     }
                 }
             }
-
         }
-        //  -----------------------
+       
+        // }
+        //  PID OUTPUT READ SETIAP 10 ms
         if (millis - last >= 10){
             derajat = ((enc.getPulses() * 360.0f) / PPR); // dapat posisi derajat motor
             pidOutput = pid.getOutput(derajat, targetPosition); // pid out
             motor.speed(pidOutput); // set motor
             last = millis; // waktu
-        }
-
-        
+        } 
+        printf("derajat = %f \n ", (derajat));
+    }
     return 0;
 }
