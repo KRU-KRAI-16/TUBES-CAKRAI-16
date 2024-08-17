@@ -4,12 +4,12 @@
  */
 
 #include "mbed.h"
-#include "../../KRAI_library/Pinout/BoardManagerV1.h"
-#include "../../KRAI_library/Motor/Motor.h"
-#include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
-#include "../../KRAI_library/encoderKRAI/encoderKRAI.h"
-#include "../../KRAI_library/JoystickPS3/JoystickPS3.h"
-#include "../../KRAI_library/JoystickPS3/MappingJoystick.h"
+#include "../../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../../KRAI_library/Motor/Motor.h"
+#include "../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+#include "../../../KRAI_library/encoderKRAI/encoderKRAI.h"
+#include "../../../KRAI_library/JoystickPS3/JoystickPS3.h"
+#include "../../../KRAI_library/JoystickPS3/MappingJoystick.h"
 
 #define PWM BMV1_PWM_MOTOR_1
 #define FOR BMV1_FOR_MOTOR_1
@@ -212,7 +212,7 @@ int main()
         {
             //printf("RX : %d RY : %d LX : %d LY : %d\n", ps3.getRX(), ps3.getRY(), ps3.getLX(), ps3.getLY());
             // printf("R1 : %d R2 : %d L1 : %d L2 : %d\n", ps3.getR1(), ps3.getR2(), ps3.getL1(), ps3.getL2());
-            // printf("Kotak : %d Silang : %d Lingkaran : %d Segitiga : %d", ps3.getKotak(), ps3.getSilang(), ps3.getLingkaran(), ps3.getSegitiga());
+            printf("Kotak : %d Silang : %d Lingkaran : %d Segitiga : %d\n", ps3.getKotak(), ps3.getSilang(), ps3.getLingkaran(), ps3.getSegitiga());
             //printf("Up : %d Left : %d Right : %d Down : %d\n", ps3.getButtonUp(), ps3.getButtonLeft(), ps3.getButtonRight(), ps3.getButtonDown());
             // printf("Start : %d Select : %d\n", ps3.getStart(), ps3.getSelect());
         }

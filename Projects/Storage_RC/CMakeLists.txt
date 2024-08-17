@@ -18,6 +18,8 @@ add_executable(${APP_TARGET}
     ../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.cpp
     ../../../KRAI_library/Motor/Motor.cpp
     ../../../KRAI_library/encoderKRAI/encoderKRAI.cpp
+    ../../../KRAI_library/JoystickPS3/JoystickPS3.cpp
+
 )
 
 target_link_libraries(${APP_TARGET} mbed-os)
