@@ -1,10 +1,10 @@
 #include "mbed.h"
-#include "../../KRAI_library/KRAI_library/Pinout/BoardManagerV1.h"
-#include "../../KRAI_library/Motor/Motor.h"
-#include "../../KRAI_library/encoderKRAI/encoderKRAI.h"
-#include "../../KRAI_library/KRAI_library/MiniPID/MiniPID.h"
-#include "../../KRAI_library/servoKRAI/servoKRAI.h"
-// #include ".../../KRAI_library/KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+#include "../../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../../KRAI_library/Motor/Motor.h"
+#include "../../../KRAI_library/encoderKRAI/encoderKRAI.h"
+#include "../../../KRAI_library/MiniPID/MiniPID.h"
+#include "../../../KRAI_library/servoKRAI/servoKRAI.h"
+#include "../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
 
 //============================SETUP BASIC TIMER======================================
 Ticker ms_tick;
@@ -30,16 +30,14 @@ FileHandle *mbed::mbed_override_console(int fd) {
 // //==============================SETUP CANBUS==========================================
 #define CAN_TX PA_11
 #define CAN_RX PA_12
-#define ID_BM 2
+#define ID_BM_GRIPPER 2
 
 int data_timer = 0;
 int can_timeout_timer = 0;
-CAN can(PA_11, PA_12, 500000);
+CAN can(CAN_TX, CAN_RX, 500000);
 
-bool ISGRIPPING = false;
-
-BMAktuatorKRAI BoardModular(ID_
-  BM, &millis);
+// Switch1 -> run gripper sequence (PG45)
+BMAktuatorKRAI gripper(ID_BM_GRIPPER, &millis);
 
 // Definisikan Lamanya Menerima data
 #define TS_READ_CAN     2   // 
@@ -50,44 +48,19 @@ BMAktuatorKRAI BoardModular(ID_
 #define PPR 10332.0f
 
 // PID
-MiniPID pid(0.06, 0, 0);
+MiniPID pid(0.033, 0, 0.5);
 uint32_t last = 0; 
 uint32_t lastposition = 0;
+
+// GRIPPER
+bool sequence1 = false;
+bool button_atas;
+bool button_bawah;
  
- //==================================SETUP TIMEOUT=========================//
- class TimeOutGRIPPER
-{
-private:
-    uint32_t prevTime = 0;
-    uint32_t tempIntegral = 0;
-    uint32_t durasiIgnore = 200; // ms
-public:
-    TimeOutPS3() = default;
-    TimeOutPS3(uint32_t durasiIgn) : durasiIgnore(durasiIgn) {}
-    void updateTime(uint32_t time) { this->prevTime = time; }
-    bool checkTimeOut(bool run, uint32_t timeNow) {
-        if (run == false) {
-            this->tempIntegral = 0;
-            this->prevTime = timeNow;
-            return false;
-        }
-        else {
-            this->tempIntegral +=  (timeNow - this->prevTime);
-            if (this->tempIntegral > this->durasiIgnore) {
-                return true;
-            }
-            return false;
-        }
-    }
-};
-
-TimeOutGRIPPER ForGrip(3000);
-
-
-
 int main()
 {
     //TIMER
+
     ms_tick.attach(&onMillisecondTicker, 0.001); 
 
     //SERVO
@@ -104,50 +77,69 @@ int main()
     float targetPosition = 0.0; // Start at 0 degrees
 
     //CAN
-    // bool CANmessage = false;
-
-    //================================
+    bool CANmessage = false;
 
     
     while (true)
     {
         // TERIMA DATA CAN SETIAP 100 ms
-        // if (BoardModular.readCAN(100)){
-        //     CANmessage = true;
-        
-        if(!ISGRIPPING){
-            ISGRIPPING+
+        if (gripper.readCAN(TS_READ_CAN)){
+            if (millis - data_timer > 500)
+            {
+                led = !led;
+                data_timer = millis;
+            }
+            can_timeout_timer = millis;
         }
 
-        // SEQUENCE
-        // if(CANmessage){
-        if (millis - lastposition >= 3000){
-            myServo.position(80);
-            if(millis-lastposition >= 4000){
-                targetPosition = 100.0; 
-                if (millis - lastposition >= 6000){
-                    myServo.position(-20);
-                    if (millis - lastposition >= 7000){
-                        targetPosition = 0.0; 
-                        if (millis - lastposition >= 8500){
-                            lastposition = millis;
+        // Get gripper sequence trigger message
+        if (!CANmessage)
+        {
+            CANmessage = gripper.getSwitch1();
+        }
+        
 
-                        }
-                        // CANmessage = false;
+        // SEQEUENCE 1
+        // gripper tutup, lengan naik, gripper buka kembali
+        if (CANmessage){
+            myServo.position(80);
+            if (millis - lastposition >= 1000){
+                if (button_atas == true ){
+                    targetPosition = derajat;
+                    if (millis - lastposition >= 1100){
+                        myServo.position(-20);
+                        sequence1 = true;
+                        lastposition = millis;
+                        CANmessage = false;
                     }
                 }
             }
+                else{
+                    motor.speed(0.4);
+                }
         }
-       
-        // }
+
+        // SEQUENCE 2, berjalan jika sequence 1 selesai dilakukan (sequence1 == true)
+        // Untuk gripper turun ke posisi semula
+        if (sequence1){
+            if(button_bawah){
+                motor.speed(0);
+                sequence1 = false;
+            }
+            else{
+                motor.speed(-0.2);
+            }
+        }
+
         //  PID OUTPUT READ SETIAP 10 ms
-        if (millis - last >= 10){
+        if (millis - last >= 10 && CANmessage == true){
             derajat = ((enc.getPulses() * 360.0f) / PPR); // dapat posisi derajat motor
             pidOutput = pid.getOutput(derajat, targetPosition); // pid out
             motor.speed(pidOutput); // set motor
             last = millis; // waktu
         } 
-        printf("derajat = %f \n ", (derajat));
+        printf("derajat = %f, setA = %f, setB = %f \n ", (derajat), 0.0f, 100.0f);
+
     }
     return 0;
 }
