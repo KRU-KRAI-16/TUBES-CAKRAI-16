@@ -71,21 +71,19 @@ int main (){
 
 
 while (true){
-    // // TERIMA DATA CAN SETIAP 100 ms
-    //     if (gripper.readCAN(TS_READ_CAN)){
-    //         if (millis - data_timer > 500)
-    //         {
-    //             led = !led;
-    //             data_timer = millis;
-    //         }
-    //         can_timeout_timer = millis;
-    //     }
 
-
-
+        // Blinking jika menerima data CAN
+        if (gripper.readCAN(TS_READ_CAN)){
+            if (millis - data_timer > 500)
+            {
+                led = !led;
+                data_timer = millis;
+            }
+            can_timeout_timer = millis;
+        }
 
         // flywheel bola merah
-
+        
 
         // if (tombol buang merah == true) -> bola keluar
         if (millis - motor1time >= 3000){
