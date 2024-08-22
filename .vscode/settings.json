@@ -2,6 +2,7 @@
     "files.associations": {
         "*.ejs": "html",
         "cstdint": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "dense": "cpp"
     }
 }

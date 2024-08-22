@@ -176,6 +176,12 @@ int main()
 
         // printf("mot1 : %f, mot2 : %f \n", BL_setvalue, FL_setvalue);
 
+        float explicit_r0 = 0.0f;
+
+        // if (BL_setvalue == 0.0f  && FL_setvalue == 0.0f ){
+        //     explicit_r0 = 0.0f;
+        // }
+
         // PID SEMENTARA
         if (millis - lastmillispulse > timeSampling){
             lastmillispulse = millis;
@@ -188,8 +194,8 @@ int main()
             pulseThen_BL = encoder_BL.getPulses();
             pulseThen_FL = encoder_FL.getPulses();
 
-            PWM_motor_BL = ADRC_BL.createInputSignal(ADRC_BL.fhan_setPointTrajectory(BL_setvalue, 0.6), rotatePerSec_BL, 1.0f);
-            PWM_motor_FL = ADRC_FL.createInputSignal(ADRC_FL.fhan_setPointTrajectory(FL_setvalue, 0.6), rotatePerSec_FL, 1.0f);
+            PWM_motor_BL = ADRC_BL.createInputSignal(ADRC_BL.fhan_setPointTrajectory(BL_setvalue, explicit_r0), rotatePerSec_BL, 1.0f);
+            PWM_motor_FL = ADRC_FL.createInputSignal(ADRC_FL.fhan_setPointTrajectory(FL_setvalue, explicit_r0), rotatePerSec_FL, 1.0f);
 
             
             // PWM_motor_BL = pid_BL.getOutput(rotatePerSec_BL, BL_setvalue);

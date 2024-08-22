@@ -118,6 +118,8 @@ TimeOutPS3 timeOut_Kiri(200);
 TimeOutPS3 timeOut_Silang(200);
 TimeOutPS3 timeOut_Lingkaran(200);
 TimeOutPS3 timeOut_Kotak(200);
+TimeOutPS3 timeOut_L2(200);
+
 
 int main()
 {
@@ -141,6 +143,10 @@ int main()
     float vx_mag = 1;
     float vy_mag = 1;
     float omega_mag = 0.7;
+    bool SnailMode = false;
+
+    //Bismillah
+
     // float deltaVRight, deltaVLeft;
     // float deltaVFor, deltaVRev;
 
@@ -159,14 +165,14 @@ int main()
 
         //============================DEBUG GAMING==================================
 
-        isDebug = true;
+        isDebug = false;
         if (isDebug)
         {
-            //printf("RX : %d RY : %d LX : %d LY : %d", ps3.getRX(), ps3.getRY(), ps3.getLX(), ps3.getLY());
-            //printf("R1 : %d R2 : %d L1 : %d L2 : %d", ps3.getR1(), ps3.getR2(), ps3.getL1(), ps3.getL2());
-            printf("Kotak : %d Silang : %d Lingkaran : %d Segitiga : %d\n", ps3.getKotak(), ps3.getSilang(), ps3.getLingkaran(), ps3.getSegitiga());
-            //printf("Up : %d Left : %d Right : %d Down : %d", ps3.getButtonUp(), ps3.getButtonLeft(), ps3.getButtonRight(), ps3.getButtonDown());
-            //printf("Start : %d Select : %d\n", ps3.getStart(), ps3.getSelect());
+            // printf("RX : %d RY : %d LX : %d LY : %d", ps3.getRX(), ps3.getRY(), ps3.getLX(), ps3.getLY());
+            // printf("R1 : %d R2 : %d L1 : %d L2 : %d", ps3.getR1(), ps3.getR2(), ps3.getL1(), ps3.getL2());
+            // printf("Kotak : %d Silang : %d Lingkaran : %d Segitiga : %d\n", ps3.getKotak(), ps3.getSilang(), ps3.getLingkaran(), ps3.getSegitiga());
+            // printf("Up : %d Left : %d Right : %d Down : %d", ps3.getButtonUp(), ps3.getButtonLeft(), ps3.getButtonRight(), ps3.getButtonDown());
+            // printf("Start : %d Select : %d\n", ps3.getStart(), ps3.getSelect());
             // printf("vx : %f vy : %f omega : %f ", vx, vy, omega);
             // printf("FL : %f FR : %f BL : %f BR : %f \n", FL_setvalue, FR_setvalue, BL_setvalue, BR_setvalue);
 
@@ -281,13 +287,31 @@ int main()
             timeOut_Kanan.checkTimeOut(false, millis);
         }
 
+        if (ps3.getL2())
+        {
+            if (timeOut_L2.checkTimeOut(true, millis))
+            {
+                SnailMode = !SnailMode;
+            }
+        }
+        else {
+            timeOut_L2.checkTimeOut(false, millis);
+        }
+
         #define SPEED_MULTIPLIER 1.5f
         #define OMEGA_MULTIPLIER 1.5f
+        
 
         vx = SPEED_MULTIPLIER*vx;
         vy = SPEED_MULTIPLIER*vy;
         omega = OMEGA_MULTIPLIER*omega;
 
+        if (SnailMode)
+        {
+            vx = vx/2;
+            vy = vy/2;
+            omega = omega/2;
+        }
 
         // OMNIWHEEL
         omniwheel.setVx(vx);
