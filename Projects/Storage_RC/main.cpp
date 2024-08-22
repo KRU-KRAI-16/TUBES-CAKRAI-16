@@ -2,18 +2,14 @@
  * Copyright (c) 2024 ARM Limited
  * SPDX-License-Identifier: Apache-2.0
  */
-/* mbed Microcontroller Library
- * Copyright (c) 2024 ARM Limited
- * SPDX-License-Identifier: Apache-2.0
- */
 
 #include "mbed.h"
-#include "../../KRAI_library/Pinout/BoardManagerV1.h"
-#include "../../KRAI_library/Motor/Motor.h"
-#include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
-#include "../../KRAI_library/encoderKRAI/encoderKRAI.h"
-#include "../../KRAI_library/JoystickPS3/JoystickPS3.h"
-#include "../../KRAI_library/JoystickPS3/MappingJoystick.h"
+#include "../../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../../KRAI_library/Motor/Motor.h"
+#include "../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+#include "../../../KRAI_library/encoderKRAI/encoderKRAI.h"
+#include "../../../KRAI_library/JoystickPS3/JoystickPS3.h"
+#include "../../../KRAI_library/JoystickPS3/MappingJoystick.h"
 
 #define PWM BMV1_PWM_MOTOR_1
 #define FOR BMV1_FOR_MOTOR_1
@@ -139,6 +135,9 @@ TimeOutPS3 timeOut_Atas(200);
 TimeOutPS3 timeOut_Bawah(200);
 TimeOutPS3 timeOut_Kanan(200);
 TimeOutPS3 timeOut_Kiri(200);
+TimeOutPS3 timeOut_Silang(200);
+TimeOutPS3 timeOut_Lingkaran(200);
+TimeOutPS3 timeOut_Kotak(200);
 
 
 
@@ -181,6 +180,11 @@ int main()
     int TEST = 0;
     bool isDebugPS3 = false;
 
+    // ---------------- STORAGE -------------------
+    bool release_red_ball = false;
+    bool release_blue_ball = false;
+    bool separator_extended = false;
+
 
     // --------------------------------------------------------------------------
 
@@ -207,8 +211,8 @@ int main()
         if (isDebugPS3)
         {
             //printf("RX : %d RY : %d LX : %d LY : %d\n", ps3.getRX(), ps3.getRY(), ps3.getLX(), ps3.getLY());
-            printf("R1 : %d R2 : %d L1 : %d L2 : %d\n", ps3.getR1(), ps3.getR2(), ps3.getL1(), ps3.getL2());
-            // printf("Kotak : %d Silang : %d Lingkaran : %d Segitiga : %d", ps3.getKotak(), ps3.getSilang(), ps3.getLingkaran(), ps3.getSegitiga());
+            // printf("R1 : %d R2 : %d L1 : %d L2 : %d\n", ps3.getR1(), ps3.getR2(), ps3.getL1(), ps3.getL2());
+            printf("Kotak : %d Silang : %d Lingkaran : %d Segitiga : %d\n", ps3.getKotak(), ps3.getSilang(), ps3.getLingkaran(), ps3.getSegitiga());
             //printf("Up : %d Left : %d Right : %d Down : %d\n", ps3.getButtonUp(), ps3.getButtonLeft(), ps3.getButtonRight(), ps3.getButtonDown());
             // printf("Start : %d Select : %d\n", ps3.getStart(), ps3.getSelect());
         }
@@ -219,11 +223,47 @@ int main()
         vx = 0;
         vy = 0;
         omega = 0;
+        release_blue_ball = false;
+        release_red_ball = false;
+        separator_extended = false;
         
         float deltaVRight, deltaVLeft;
         float deltaVFor, deltaVRev;
+        
+        if (ps3.getSilang())
+        {
+            if (timeOut_Silang.checkTimeOut(true, millis))
+            {
+                release_blue_ball = true;
+            }
+        }
+        else {
+            timeOut_Silang.checkTimeOut(false, millis);
+        }
 
-         if (ps3.getL1())
+        if (ps3.getLingkaran())
+        {
+            if (timeOut_Lingkaran.checkTimeOut(true, millis))
+            {
+                release_red_ball = true;
+            }
+        }
+        else {
+            timeOut_Lingkaran.checkTimeOut(false, millis);
+        }
+
+        if (ps3.getKotak())
+        {
+            if (timeOut_Kotak.checkTimeOut(true, millis))
+            {
+                separator_extended = true;
+            }
+        }
+        else {
+            timeOut_Kotak.checkTimeOut(false, millis);
+        }
+
+        if (ps3.getL1())
         {
             if (timeOut_L1.checkTimeOut(true, millis))
             {
@@ -296,157 +336,16 @@ int main()
         sender.setMotor1(int(vx*1000*SPEED_MULTIPLIER));
         sender.setMotor2(int(vy*1000*SPEED_MULTIPLIER));
         sender.setInteger(int(omega*1000*OMEGA_MULTIPLIER));
+        sender.setSwitch1(release_blue_ball);
+        sender.setSwitch2(release_red_ball);
+        sender.setSwitch3(separator_extended);
 
          //=============================CAN BUS COMM==========================//
     
         sender.sendCAN(sender.getNoBM(),5);
         gripper.sendCAN(gripper.getNoBM(),5);
 
-        //printf("vx: %f, vy: %f, omega: %f\n", vx, vy, omega);
 
-        // Untuk Kanan
-        // if(ps3.getLX() > PS3_OFFSET)
-        // {
-        //     // Mapping LX dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
-        //     deltaVRight = (map(PS3_OFFSET, 128.0, 0, (SPEED_MS_XY  * 0.5), ps3.getLX()));
-        //     vx = deltaVRight;
-        // }
-
-        // // Untuk Kiri
-        // else if(ps3.getLX() < -PS3_OFFSET)
-        // {
-        //     // r0 = FOR_REV_STATE;
-    
-        //     // Mapping LX dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
-        //     deltaVLeft = (map(-128.0, -PS3_OFFSET, -(SPEED_MS_XY * 0.5), 0, ps3.getLX()));
-        //     vx = deltaVLeft;
-        // }
-
-        // // Maju (adalah -80)
-        // else if (ps3.getLY() < -PS3_OFFSET)
-        // {
-        //     // r0 = FOR_REV_STATE;
-            
-        //     // Mapping LY dari 0 sampai -128 menjadi dalam m/s dari 0 sampai 1
-        //     deltaVFor = (map(-128.0, -PS3_OFFSET, -(SPEED_MS_XY * 0.5), 0, ps3.getLY()));
-        //     vy = deltaVFor;
-        // }
-
-        // // Mundur
-        // else if (ps3.getLY() > PS3_OFFSET)
-        // {
-        //     // r0 = FOR_REV_STATE;
-        
-        //     // Mapping LY dari 0 sampai 128 menjadi dalam m/s dari 0 sampai 1
-        //     deltaVRev = (map(PS3_OFFSET, 128.0, 0, (SPEED_MS_XY * 0.5), ps3.getLY()));
-        //     vy = deltaVRev;
-        // }
-
-        // else {
-        //     vx = 0;
-        //     vy = 0;
-        // }
-
-
-        // // For ROTATE
-        // if (ps3.getRX() != 0)
-        // {
-
-        //     // r0 = IS_ROTATE_STATE;
-        
-
-        //     // Mapping RX dari -128 sampai 128 menjadi dalam rad/s rentang -5 sampai 5
-        //     // float deltaVRot = (map(-128.0, 128.0, SPEED_MS_OMEGA, -SPEED_MS_OMEGA, ps3.getRX()));
-
-        //     // Mapping RX dari -128 sampai -30 menjadi dalam rad/s rentang SPEED_MS_OMEGA sampai 0
-        //     // Mapping RX dari 30 sampai 128 menjadi dalam rad/s rentang 0 sampai -SPEED_MS_OMEGA
-        //     // Diantara -30 sampai 30 menjadi 0
-        //     float deltaVRot = 0;
-        //     if (ps3.getRX() > PS3_OFFSET)
-        //     {
-        //         deltaVRot = (map(PS3_OFFSET, 128.0, 0, -SPEED_MS_OMEGA, ps3.getRX()));
-        //     }
-        //     else if (ps3.getRX() < -PS3_OFFSET)
-        //     {
-        //         deltaVRot = (map(-128.0, -PS3_OFFSET, SPEED_MS_OMEGA, 0, ps3.getRX()));
-        //     }
-        //     else
-        //     {
-        //         deltaVRot = 0;
-        //     }
-        //     omega = deltaVRot;
-
-        //     // if (deltaVRot < 0.2 && deltaVRot > -0.2)
-        //     // {
-        //     //     deltaVRot = 0;
-        //     // }
-        //     // if (vx != 0 || vy != 0)
-        //     // {
-        //     //     omega += deltaVRot * SPEED_MULTIPLIER_SLOW;
-        //     // }
-        //     // else
-        //     // {
-        //     //     omega += deltaVRot * 0.3;
-        //     // }
-            
-        // }
- 
-
-
-
-        // if(Isduck){
-            
-            
-        //     if (VX >= Duckspd_max){
-        //         VX = Duckspd_max;
-        //     }
-        //     else if (VX <= Duckspd_min){
-        //         VX = Duckspd_min;
-        //     }
-
-        //     if (VY >= Duckspd_max){
-        //         VY = Duckspd_max;
-        //     }
-        //     else if (VY <= Duckspd_min){
-        //         VY = Duckspd_min;
-        //     }
-            
-        //     if (Omega >= DuckOmega_max){
-        //         Omega = DuckOmega_max;
-        //     }
-        //     else if (Omega<=DuckOmega_min){
-        //         Omega = DuckOmega_min;
-        //     }
-
-
-        // }
-        
-        //printf("vx: %f, vy: %f, omega: %f\n", vx, vy, omega);
-
-        //=====================================Code gripper=======================//
-        //if (stik.getKotak()){
-          //  ToGrip = true;
-        //}
-
-        
-        /////////////////////////////////////////////////
-
-        //dikali 1000 biar bisa di kirim ke motor (ini integer idiot)
-        // prevVx = int(limitRateOfChange(prevVx, vx, DELTA_MAX)*1000);
-        // prevVy = int(limitRateOfChange(prevVy, vy, DELTA_MAX)*1000);
-        // prevOmega = int(limitRateOfChange(prevOmega, omega, DELTA_MAX)*1000);
-
-       
-
-        // printf("Vx = %d, Vy = %d, Omega = %d ", prevVx, prevVy, prevOmega);
-        // printf("deltaVRight = %f, deltaVLeft = %f, deltaVFor = %f, deltaVRev = %f\n", deltaVRight, deltaVLeft, deltaVFor, deltaVRev);   
-        
-       
-        //============================USER CODE==================================
-         
-      
-
-        // ----------------------------------------------------------------------
     }
     return 0;
 }

@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.19.0)
 
 set(MBED_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../mbed-os CACHE INTERNAL "")
 set(MBED_CONFIG_PATH ${CMAKE_CURRENT_BINARY_DIR} CACHE INTERNAL "")
-set(APP_TARGET Base_Belakang)
+set(APP_TARGET Storage)
 
 include(${MBED_PATH}/tools/cmake/app.cmake)
 
@@ -16,11 +16,8 @@ add_subdirectory(${MBED_PATH} ${CMAKE_CURRENT_BINARY_DIR}/mbed-os)
 add_executable(${APP_TARGET}
     main.cpp
     ../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.cpp
-    ../../../KRAI_library/InverseKinematics/Omni4Wheel.cpp
     ../../../KRAI_library/Motor/Motor.cpp
-    ../../../KRAI_library/encoderKRAI/encoderKRAI.cpp
-    ../../../KRAI_library/MovingAverage/MovingAverage.cpp
-    ../../../KRAI_library/MiniPID/MiniPID.cpp
+    ../../../KRAI_library/servoKRAI/servoKRAI.cpp
 )
 
 target_link_libraries(${APP_TARGET} mbed-os)
