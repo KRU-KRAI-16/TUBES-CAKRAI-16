@@ -57,7 +57,7 @@ BMStorage storage_BM(ID_BM_STORAGE, &millis);
 
 
 //==============================SETUP MOTOR==========================================
-const float MOTOR_SPEED_PWM = 0.2;
+const float MOTOR_SPEED_PWM = 0.4;
 #define PWM_MOTOR_BIRU BMV1_PWM_MOTOR_1
 #define FOR_MOTOR_BIRU BMV1_FOR_MOTOR_1
 #define REV_MOTOR_BIRU BMV1_REV_MOTOR_1
