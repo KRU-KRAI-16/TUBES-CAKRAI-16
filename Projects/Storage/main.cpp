@@ -72,7 +72,7 @@ Motor motor_merah(PWM_MOTOR_MERAH, FOR_MOTOR_MERAH, REV_MOTOR_MERAH);
 
 
 //==============================SETUP SERVO==========================================
-#define SERVO_PIN BMV1_INT_1
+#define SERVO_PIN BMV1_INT_3
 
 servoKRAI separator_servo(SERVO_PIN);
 bool separator_state = false;
@@ -82,7 +82,7 @@ bool separator_button_state = false;
 int main (){
 
     //TIMER
-    ms_tick.attach(&onMillisecondTicker, 0.001); 
+    ms_tick.attach_us(&onMillisecondTicker, 1000); 
 
 
     while (true){
@@ -96,10 +96,12 @@ int main (){
             }
             can_timeout_timer = millis;
         }
+        // storage_BM.printData(100);
+        // printf("aaaaa");
 
         // Buang bola biru
         if (storage_BM.getBuangBolaBiru()){
-            motor_biru.speed(MOTOR_SPEED_PWM);
+            motor_biru.speed(-MOTOR_SPEED_PWM);
         } else {
             motor_biru.speed(0);
         }
