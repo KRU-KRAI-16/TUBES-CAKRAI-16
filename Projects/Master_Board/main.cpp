@@ -118,6 +118,7 @@ TimeOutPS3 timeOut_Kiri(200);
 TimeOutPS3 timeOut_Silang(200);
 TimeOutPS3 timeOut_Lingkaran(200);
 TimeOutPS3 timeOut_Kotak(200);
+TimeOutPS3 timeOut_Segitiga(200);
 TimeOutPS3 timeOut_L2(200);
 
 
@@ -156,6 +157,7 @@ int main()
     bool release_red_ball = false;
     bool release_blue_ball = false;
     bool separator_extended = false;
+    bool gripper_run = false;
 
     while (true)
     {
@@ -187,6 +189,18 @@ int main()
         release_blue_ball = false;
         release_red_ball = false;
         separator_extended = false;
+        gripper_run = false;
+
+        if (ps3.getSegitiga())
+        {
+            if (timeOut_Segitiga.checkTimeOut(true, millis))
+            {
+                gripper_run = true;
+            }
+        }
+        else {
+            timeOut_Segitiga.checkTimeOut(false, millis);
+        }
 
         if (ps3.getSilang())
         {
@@ -353,9 +367,13 @@ int main()
         storage.setSwitch2(release_red_ball);
         storage.setSwitch3(separator_extended);
 
+        // CAN GRIPPER
+        gripper.setSwitch1(gripper_run);
+
         can_kanan.sendCAN(can_kanan.getNoBM(), TS_SEND_CAN);
         can_kiri.sendCAN(can_kiri.getNoBM(), TS_SEND_CAN);
         storage.sendCAN(storage.getNoBM(), TS_SEND_CAN);
+        gripper.sendCAN(gripper.getNoBM(), TS_SEND_CAN);
     }
     return 0;
 }
