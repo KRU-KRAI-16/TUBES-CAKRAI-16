@@ -15,6 +15,8 @@ void onMillisecondTicker(void)
 }
 DigitalOut led(PC_13);
 //-----------------------------------------------------------------------------------
+
+
 //=========================SETUP UART SERIAL PRINT===================================
 #define SERIAL_TX PB_6
 #define SERIAL_RX PB_7
@@ -27,53 +29,66 @@ FileHandle *mbed::mbed_override_console(int fd) {
 }
 //-----------------------------------------------------------------------------------
 
-// //==============================SETUP CANBUS==========================================
+
+//==============================SETUP CANBUS==========================================
 #define CAN_TX PA_11
 #define CAN_RX PA_12
-#define ID_BM_GRIPPER 2
+#define ID_BM_STORAGE 5
 
 int data_timer = 0;
 int can_timeout_timer = 0;
 CAN can(CAN_TX, CAN_RX, 500000);
 
-// Switch1 -> run gripper sequence (PG45)
-BMAktuatorKRAI gripper(ID_BM_GRIPPER, &millis);
+class BMStorage : public BMAktuatorKRAI
+{
+public:
+    using BMAktuatorKRAI::BMAktuatorKRAI;
+    bool getBuangBolaBiru(){ return this->getSwitch1(); }
+    bool getBuangMerah(){ return this->getSwitch2(); }
+    bool getToggleSeparator(){ return this->getSwitch3(); }
+};
+
+BMStorage storage_BM(ID_BM_STORAGE, &millis);
 
 // Definisikan Lamanya Menerima data
 #define TS_READ_CAN     2   // 
 #define TS_SEND_CAN     5   // 
-// //-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
 
-// float b;
-// float m;
 
-int motor1time = 0;
-int motor2time = 0;
-int servotime = 0;
+//==============================SETUP MOTOR==========================================
+const float MOTOR_SPEED_PWM = 0.2;
+#define PWM_MOTOR_BIRU BMV1_PWM_MOTOR_1
+#define FOR_MOTOR_BIRU BMV1_FOR_MOTOR_1
+#define REV_MOTOR_BIRU BMV1_REV_MOTOR_1
+
+#define PWM_MOTOR_MERAH BMV1_PWM_MOTOR_2
+#define FOR_MOTOR_MERAH BMV1_FOR_MOTOR_2
+#define REV_MOTOR_MERAH BMV1_REV_MOTOR_2
+
+Motor motor_biru(PWM_MOTOR_BIRU, FOR_MOTOR_BIRU, REV_MOTOR_BIRU);
+Motor motor_merah(PWM_MOTOR_MERAH, FOR_MOTOR_MERAH, REV_MOTOR_MERAH);
+//-----------------------------------------------------------------------------------
+
+
+//==============================SETUP SERVO==========================================
+#define SERVO_PIN BMV1_INT_1
+
+servoKRAI separator_servo(SERVO_PIN);
+bool separator_state = false;
+bool separator_button_state = false;
+//-----------------------------------------------------------------------------------
 
 int main (){
 
     //TIMER
     ms_tick.attach(&onMillisecondTicker, 0.001); 
 
-    //SERVO
-    servoKRAI myServo(BMV1_INT_1);
 
-    //MOTOR
-    Motor motor1(BMV1_PWM_MOTOR_1, BMV1_FOR_MOTOR_1, BMV1_REV_MOTOR_1);
-    Motor motor2(BMV1_PWM_MOTOR_2, BMV1_FOR_MOTOR_2, BMV1_REV_MOTOR_2);
-
-    //CAN
-    // bool CANmessage = false;
-
-    // state awal kedua flywheel
-    
-
-
-while (true){
+    while (true){
 
         // Blinking jika menerima data CAN
-        if (gripper.readCAN(TS_READ_CAN)){
+        if (storage_BM.readCAN(TS_READ_CAN)){
             if (millis - data_timer > 500)
             {
                 led = !led;
@@ -82,47 +97,39 @@ while (true){
             can_timeout_timer = millis;
         }
 
-        // flywheel bola merah
+        // Buang bola biru
+        if (storage_BM.getBuangBolaBiru()){
+            motor_biru.speed(MOTOR_SPEED_PWM);
+        } else {
+            motor_biru.speed(0);
+        }
         
+        // Buang bola merah
+        if (storage_BM.getBuangMerah()){
+            motor_merah.speed(MOTOR_SPEED_PWM);
+        } else {
+            motor_merah.speed(0);
+        }
 
-        // if (tombol buang merah == true) -> bola keluar
-        if (millis - motor1time >= 3000){
-            motor1.speed(0.2);
-            if (millis - motor1time >= 6000){ // -> set flywheel mutar untuk buang berapa detik
-                motor1time = millis; // tombol buang merah = false;
+        // Toggle separator
+        bool separator_button_reading = storage_BM.getToggleSeparator();
+
+        if (separator_button_reading != separator_button_state){
+            separator_button_state = separator_button_reading;
+
+            if (separator_button_state == true)
+            {
+                separator_state = !separator_state;
+                separator_state ? separator_servo.position(0) : separator_servo.position(70);
+
             }
             
         }
-        // initial condition false (bola ditahan)
-        else if (millis - motor1time < 3000){
-            motor1.speed(-0.2);
-        }
-
-        // flywheel bola biru
-        // if (tombol buang biru == true)
-
-
-
-        if (millis - motor2time >= 3000){
-            motor2.speed(0.2);
-            if (millis - motor2time >= 6000){
-                motor2time = millis;
-            } 
-        }
-        else if (millis - motor2time < 3000){
-            motor2.speed(-0.2);
-        }
-        // separator
-        // if (tombol separator == true)
-
-        if (millis - servotime >= 3000){
-            myServo.position(0);
-            if (millis- servotime >= 6000){
-                   servotime = millis;
-            }
-        }
-        else if (millis - servotime < 3000){
-            myServo.position(90);
-        }
-}
+        
+        
+        
+        
+                
+        
+    }
 }
