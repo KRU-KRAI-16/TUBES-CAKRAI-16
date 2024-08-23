@@ -6,14 +6,14 @@
 #include "mbed.h"
 
 // Board Manager
-#include "../../../KRAI_library/Pinout/BoardManagerV1.h"
-#include "../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+#include "../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
 
 // Joystick
-#include "../../../KRAI_library/JoystickPS3/JoystickPS3.h"
+#include "../../KRAI_library/JoystickPS3/JoystickPS3.h"
 
 // Inverse Kinematics
-#include "../../../KRAI_library/InverseKinematics/Omni4Wheel.h"
+#include "../../KRAI_library/InverseKinematics/Omni4Wheel.h"
 
 //=========================SETUP BASIC TIMER======================================
 Ticker ms_tick;
@@ -322,9 +322,9 @@ int main()
 
         if (SnailMode)
         {
-            vx = vx/2;
-            vy = vy/2;
-            omega = omega/2;
+            vx = vx/10;
+            vy = vy/10;
+            omega = omega/10;
         }
 
         // OMNIWHEEL
