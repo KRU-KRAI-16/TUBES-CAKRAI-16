@@ -1,10 +1,13 @@
 #include "mbed.h"
-#include "../../../KRAI_library/Pinout/BoardManagerV1.h"
-#include "../../../KRAI_library/Motor/Motor.h"
-#include "../../../KRAI_library/encoderKRAI/encoderKRAI.h"
-#include "../../../KRAI_library/MiniPID/MiniPID.h"
-#include "../../../KRAI_library/servoKRAI/servoKRAI.h"
-#include "../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+#include "../../KRAI_library/Pinout/BoardManagerV1.h"
+#include "../../KRAI_library/Motor/Motor.h"
+#include "../../KRAI_library/encoderKRAI/encoderKRAI.h"
+#include "../../KRAI_library/MiniPID/MiniPID.h"
+#include "../../KRAI_library/servoKRAI/servoKRAI.h"
+#include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
+
+
+DigitalIn limitSwitch(BMV1_INT_2);
 
 //============================SETUP BASIC TIMER======================================
 Ticker ms_tick;
@@ -30,7 +33,7 @@ FileHandle *mbed::mbed_override_console(int fd) {
 // //==============================SETUP CANBUS==========================================
 #define CAN_TX PA_11
 #define CAN_RX PA_12
-#define ID_BM_GRIPPER 2
+#define ID_BM_GRIPPER 3
 
 int data_timer = 0;
 int can_timeout_timer = 0;
@@ -45,18 +48,17 @@ BMAktuatorKRAI gripper(ID_BM_GRIPPER, &millis);
 // //-----------------------------------------------------------------------------------
 
 // ENCODER
-#define PPR 10332.0f
+#define PPR 537.4f
 
 // PID
 MiniPID pid(0.033, 0, 0.5);
 uint32_t last = 0; 
 uint32_t lastposition = 0;
+uint32_t jalan = 0;
 
-// GRIPPER
-bool sequence1 = false;
-bool button_atas;
-bool button_bawah;
- 
+//  INTERUPT PIN
+
+
 int main()
 {
     //TIMER
@@ -79,6 +81,11 @@ int main()
     //CAN
     bool CANmessage = false;
 
+    // SEQUENCE
+    bool sequence1 = false;
+    bool jalan = true;
+    bool naik = false;
+
     
     while (true)
     {
@@ -97,49 +104,49 @@ int main()
         {
             CANmessage = gripper.getSwitch1();
         }
-        
 
-        // SEQEUENCE 1
-        // gripper tutup, lengan naik, gripper buka kembali
-        if (CANmessage){
-            myServo.position(80);
-            if (millis - lastposition >= 1000){
-                if (button_atas == true ){
-                    targetPosition = derajat;
-                    if (millis - lastposition >= 1100){
-                        myServo.position(-20);
-                        sequence1 = true;
-                        lastposition = millis;
-                        CANmessage = false;
-                    }
+        // dibagi jadi dua sequence
+    
+        // SEQUENCE 1 (gripper tutup, naik hingga menekan limit switch)
+        if (jalan == true){ // --> ini ganti jadi, if (message dari canbus){}
+
+            myServo.position(80); //servo tutup
+
+            if (millis - lastposition >= 1500){ // tunggu 1,5 detik, pastiin servo udah ditutup, kalo kelamaan turunin aja
+                if(limitSwitch.read() == true){ // --> kalo udah nyetuh limit switch
+                    myServo.position(-10); // servo buka
+                    sequence1 = true; // sequence1 selesai
+                    lastposition = 0; // reset lastposition
+                    jalan = false;
                 }
-            }
-                else{
+                else{ // -->  gripper gerak keatas (belum nyentuh limit switch)
                     motor.speed(0.4);
                 }
-        }
+            }
 
-        // SEQUENCE 2, berjalan jika sequence 1 selesai dilakukan (sequence1 == true)
-        // Untuk gripper turun ke posisi semula
-        if (sequence1){
-            if(button_bawah){
+        }
+//      // sequence 2, berjalan jika sequence 1 selesai (jika limit switch diatas ditekan)
+        if(sequence1 == true){
+            if (millis - lastposition >= 4500){ 
                 motor.speed(0);
                 sequence1 = false;
+                lastposition = 0;
             }
             else{
                 motor.speed(-0.2);
             }
         }
 
-        //  PID OUTPUT READ SETIAP 10 ms
-        if (millis - last >= 10 && CANmessage == true){
-            derajat = ((enc.getPulses() * 360.0f) / PPR); // dapat posisi derajat motor
-            pidOutput = pid.getOutput(derajat, targetPosition); // pid out
-            motor.speed(pidOutput); // set motor
-            last = millis; // waktu
-        } 
-        printf("derajat = %f, setA = %f, setB = %f \n ", (derajat), 0.0f, 100.0f);
+        else if (jalan == false && sequence1 == true) { // kondisi awal, servo dalam keadan buka
+            lastposition = millis;
+            myServo.position(-25);
 
+        }
+        
+        
+        
+        printf("switch = %d \n ", (limitSwitch.read()));
+        
     }
     return 0;
 }

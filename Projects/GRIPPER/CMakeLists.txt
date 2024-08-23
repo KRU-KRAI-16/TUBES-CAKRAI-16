@@ -15,10 +15,12 @@ add_subdirectory(${MBED_PATH} ${CMAKE_CURRENT_BINARY_DIR}/mbed-os)
 
 add_executable(${APP_TARGET}
     main.cpp
-    ../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.cpp
+
     ../../../KRAI_library/Motor/Motor.cpp
     ../../../KRAI_library/encoderKRAI/encoderKRAI.cpp
-    ../../../KRAI_library/JoystickPS3/JoystickPS3.cpp
+    ../../../KRAI_library/MiniPID/MiniPID.cpp
+    ../../../KRAI_library/servoKRAI/servoKRAI.cpp
+    ../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.cpp
     
 )
 
