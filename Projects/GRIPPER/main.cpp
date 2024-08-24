@@ -33,7 +33,7 @@ FileHandle *mbed::mbed_override_console(int fd) {
 // //==============================SETUP CANBUS==========================================
 #define CAN_TX PA_11
 #define CAN_RX PA_12
-#define ID_BM_GRIPPER 3
+#define ID_BM_GRIPPER 2
 
 int data_timer = 0;
 int can_timeout_timer = 0;
@@ -103,13 +103,12 @@ int main()
         if (!CANmessage)
         {
             CANmessage = gripper.getSwitch1();
-            gripper.printData(200);
         }
 
         // dibagi jadi dua sequence
     
         // SEQUENCE 1 (gripper tutup, naik hingga menekan limit switch)
-        if (jalan == true){ // --> ini ganti jadi, if (message dari canbus){}
+        if (CANmessage == true){ // --> ini ganti jadi, if (message dari canbus){}
 
             myServo.position(80); //servo tutup
 
@@ -121,7 +120,7 @@ int main()
                     jalan = false;
                 }
                 else{ // -->  gripper gerak keatas (belum nyentuh limit switch)
-                    motor.speed(0.4);
+                    motor.speed(0.6);
                 }
             }
 
