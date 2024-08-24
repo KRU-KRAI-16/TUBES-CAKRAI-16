@@ -135,7 +135,7 @@ int main()
                 motor.speed(0.6);
             }
         }
-        else if(!ArmUp&&GripRun){
+        else if(!ArmUp&&GripRun){ 
             lastposition = millis;
             if (millis - lastposition >= 1500){ 
                 motor.speed(0);
