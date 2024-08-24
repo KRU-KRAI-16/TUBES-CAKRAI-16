@@ -33,7 +33,7 @@ FileHandle *mbed::mbed_override_console(int fd) {
 // //==============================SETUP CANBUS==========================================
 #define CAN_TX PA_11
 #define CAN_RX PA_12
-#define ID_BM_GRIPPER 2
+#define ID_BM_GRIPPER 3
 
 int data_timer = 0;
 int can_timeout_timer = 0;
@@ -83,8 +83,8 @@ int main()
 
     // SEQUENCE
     bool sequence1 = false;
-    bool jalan = true;
-    bool naik = false;
+    
+    
 
     
     while (true)
@@ -110,11 +110,11 @@ int main()
         // SEQUENCE 1 (gripper tutup, naik hingga menekan limit switch)
         if (CANmessage == true){ // --> ini ganti jadi, if (message dari canbus){}
 
-            myServo.position(80); //servo tutup
+            myServo.position(0); //servo tutup
 
             if (millis - lastposition >= 1500){ // tunggu 1,5 detik, pastiin servo udah ditutup, kalo kelamaan turunin aja
                 if(limitSwitch.read() == true){ // --> kalo udah nyetuh limit switch
-                    myServo.position(-10); // servo buka
+                    myServo.position(90); // servo buka
                     sequence1 = true; // sequence1 selesai
                     lastposition = 0; // reset lastposition
                     jalan = false;
@@ -139,13 +139,15 @@ int main()
 
         else if (jalan == false && sequence1 == true) { // kondisi awal, servo dalam keadan buka
             lastposition = millis;
-            myServo.position(-25);
+            myServo.position(0);
 
         }
         
         
         
         printf("switch = %d \n ", (limitSwitch.read()));
+        printf("CANMSG = %d \n ", CANmessage);
+        printf("switch = %d \n ", sequence1);
         
     }
     return 0;
