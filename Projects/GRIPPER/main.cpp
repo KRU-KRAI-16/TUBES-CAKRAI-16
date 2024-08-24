@@ -103,6 +103,7 @@ int main()
         if (!CANmessage)
         {
             CANmessage = gripper.getSwitch1();
+            gripper.printData(200);
         }
 
         // dibagi jadi dua sequence
