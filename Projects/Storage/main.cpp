@@ -7,7 +7,6 @@
 //============================SETUP BASIC TIMER======================================
 Ticker ms_tick;
 uint32_t millis = 0;
-uint32_t motortime = 0;
 void onMillisecondTicker(void)
 {
     // this code will run every millisecond
@@ -57,7 +56,7 @@ BMStorage storage_BM(ID_BM_STORAGE, &millis);
 
 
 //==============================SETUP MOTOR==========================================
-const float MOTOR_SPEED_PWM = 0.4;
+const float MOTOR_SPEED_PWM = 0.6f;
 #define PWM_MOTOR_BIRU BMV1_PWM_MOTOR_1
 #define FOR_MOTOR_BIRU BMV1_FOR_MOTOR_1
 #define REV_MOTOR_BIRU BMV1_REV_MOTOR_1
@@ -72,7 +71,7 @@ Motor motor_merah(PWM_MOTOR_MERAH, FOR_MOTOR_MERAH, REV_MOTOR_MERAH);
 
 
 //==============================SETUP SERVO==========================================
-#define SERVO_PIN BMV1_INT_3
+#define SERVO_PIN BMV1_INT_2
 
 servoKRAI separator_servo(SERVO_PIN);
 bool separator_state = false;
@@ -82,13 +81,14 @@ bool separator_button_state = false;
 int main (){
 
     //TIMER
-    ms_tick.attach_us(&onMillisecondTicker, 1000); 
+    ms_tick.attach_us(onMillisecondTicker, 1000); 
 
 
     while (true){
 
         // Blinking jika menerima data CAN
-        if (storage_BM.readCAN(TS_READ_CAN)){
+        if (storage_BM.readCAN(TS_READ_CAN))
+        {
             if (millis - data_timer > 500)
             {
                 led = !led;
@@ -96,19 +96,26 @@ int main (){
             }
             can_timeout_timer = millis;
         }
-        // storage_BM.printData(100);
-        // printf("aaaaa");
+
+        // Debugging
+        bool isDebugging = false;
+        if (isDebugging)
+        {
+            storage_BM.printData(100);
+            // printf("aaaaa");
+        }
+        
 
         // Buang bola biru
         if (storage_BM.getBuangBolaBiru()){
-            motor_biru.speed(-MOTOR_SPEED_PWM);
+            motor_biru.speed(MOTOR_SPEED_PWM);
         } else {
             motor_biru.speed(0);
         }
         
         // Buang bola merah
         if (storage_BM.getBuangMerah()){
-            motor_merah.speed(MOTOR_SPEED_PWM);
+            motor_merah.speed(-MOTOR_SPEED_PWM);
         } else {
             motor_merah.speed(0);
         }
@@ -122,7 +129,7 @@ int main (){
             if (separator_button_state == true)
             {
                 separator_state = !separator_state;
-                separator_state ? separator_servo.position(0) : separator_servo.position(70);
+                separator_state ? separator_servo.position(110) : separator_servo.position(30);
 
             }
             

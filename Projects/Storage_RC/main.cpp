@@ -207,7 +207,7 @@ int main()
        //==============================INPUT GETTER=========================================/
         
         //==========================================INPUT NO  JITTER==========================//
-        isDebugPS3 = false;
+        isDebugPS3 = true;
         if (isDebugPS3)
         {
             //printf("RX : %d RY : %d LX : %d LY : %d\n", ps3.getRX(), ps3.getRY(), ps3.getLX(), ps3.getLY());
