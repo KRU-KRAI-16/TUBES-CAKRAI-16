@@ -79,13 +79,14 @@ int main()
     float targetPosition = 0.0; // Start at 0 degrees
 
     //CAN
-    bool CANmessage = false;
+    bool IsSegitiga = false;
+    bool IsR2 = false;
 
-    // SEQUENCE
-    bool sequence1 = false;
     
-    
-
+    //Gripper
+    bool Gripping = false;
+    bool ArmUp = false;
+    bool GripRun = false;
     
     while (true)
     {
@@ -100,54 +101,101 @@ int main()
         }
 
         // Get gripper sequence trigger message
-        if (!CANmessage)
-        {
-            CANmessage = gripper.getSwitch1();
-        }
+        IsSegitiga = gripper.getSwitch1();
+        IsR2 = gripper.getSwitch2();
+        
 
         // dibagi jadi dua sequence
-    
-        // SEQUENCE 1 (gripper tutup, naik hingga menekan limit switch)
-        if (CANmessage == true){ // --> ini ganti jadi, if (message dari canbus){}
-
-            myServo.position(0); //servo tutup
-
-            if (millis - lastposition >= 1500){ // tunggu 1,5 detik, pastiin servo udah ditutup, kalo kelamaan turunin aja
-                if(limitSwitch.read() == true){ // --> kalo udah nyetuh limit switch
-                    myServo.position(90); // servo buka
-                    sequence1 = true; // sequence1 selesai
-                    lastposition = 0; // reset lastposition
-                    jalan = false;
-                }
-                else{ // -->  gripper gerak keatas (belum nyentuh limit switch)
-                    motor.speed(0.6);
-                }
-            }
-
+        //========================================GETTER========================================//
+        if (IsSegitiga){
+            Gripping = !Gripping;
         }
-//      // sequence 2, berjalan jika sequence 1 selesai (jika limit switch diatas ditekan)
-        if(sequence1 == true){
-            if (millis - lastposition >= 4500){ 
+
+        else if (IsR2){
+            ArmUp = !ArmUp;
+            GripRun = true;
+        }
+
+       
+
+        //==================================GRIPPING=========================================//
+        if(Gripping){
+            myServo.position(10); //servo tutup
+        }
+        else if (!Gripping) {
+            myServo.position(80); //servo buka
+        }
+
+        //=================================ARM MOVEMENT=====================================//
+        if (ArmUp){
+            if(limitSwitch.read() == true){// --> kalo udah nyetuh limit switch
                 motor.speed(0);
-                sequence1 = false;
-                lastposition = 0;
+            } 
+            else{
+                motor.speed(0.6);
+            }
+        }
+        else if(!ArmUp&&GripRun){
+            lastposition = millis;
+            if (millis - lastposition >= 1500){ 
+                motor.speed(0);
+                GripRun = false;
+                
             }
             else{
-                motor.speed(-0.2);
+                motor.speed(-0.4);
             }
         }
 
-        else if (jalan == false && sequence1 == true) { // kondisi awal, servo dalam keadan buka
-            lastposition = millis;
-            myServo.position(0);
 
-        }
+
+
+
+
+
+    
+//         // SEQUENCE 1 (gripper tutup, naik hingga menekan limit switch)
+//         if (CANmessage == true){ // --> ini ganti jadi, if (message dari canbus){}
+
+//             myServo.position(0); //servo tutup
+
+//             if (millis - lastposition >= 1500){ // tunggu 1,5 detik, pastiin servo udah ditutup, kalo kelamaan turunin aja
+//                 if(limitSwitch.read() == true){ // --> kalo udah nyetuh limit switch
+//                     myServo.position(90); // servo buka
+//                     sequence1 = true; // sequence1 selesai
+//                     lastposition = 0; // reset lastposition
+                    
+//                 }
+//                 else{ // -->  gripper gerak keatas (belum nyentuh limit switch)
+//                     motor.speed(0.6);
+//                 }
+//             }
+
+//         }
+// //      // sequence 2, berjalan jika sequence 1 selesai (jika limit switch diatas ditekan)
+//         if(sequence1 == true){
+//             if (millis - lastposition >= 4500){ 
+//                 motor.speed(0);
+//                   sequence1 = false;
+//                 lastposition = 0;
+//                 CANmessage = false; //bikin false saat iterasi selesai
+//             }
+//             else{
+//                 motor.speed(-0.2);
+//             }
+//         }
+
+//         else if (CANmessage == false && sequence1 == true) { // kondisi awal, servo dalam keadan buka
+//             lastposition = millis;
+//             myServo.position(0);
+
+//         }
         
         
         
-        printf("switch = %d \n ", (limitSwitch.read()));
-        printf("CANMSG = %d \n ", CANmessage);
-        printf("switch = %d \n ", sequence1);
+//         printf("switch = %d \n ", (limitSwitch.read()));
+//         printf("CANMSG = %d \n ", CANmessage);
+//         printf("switch = %d \n ", sequence1);
         
     }
     return 0;
