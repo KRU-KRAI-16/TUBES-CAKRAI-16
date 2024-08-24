@@ -159,6 +159,10 @@ int main()
     bool separator_extended = false;
     bool gripper_run = false;
 
+    //TOGGLE SPEED MODE
+    bool toggleL2 = false;
+    //true -> on ; false -> off
+
     while (true)
     {
         ps3.updateMillis(millis);
@@ -301,19 +305,25 @@ int main()
             timeOut_Kanan.checkTimeOut(false, millis);
         }
 
+        
+
         if (ps3.getL2())
         {
             if (timeOut_L2.checkTimeOut(true, millis))
             {
-                SnailMode = !SnailMode;
+                if (!toggleL2){
+                    SnailMode = !SnailMode;
+                    toggleL2 = true;
+                }
             }
         }
         else {
             timeOut_L2.checkTimeOut(false, millis);
+            toggleL2 = false;
         }
 
-        #define SPEED_MULTIPLIER 1.5f
-        #define OMEGA_MULTIPLIER 1.5f
+        #define SPEED_MULTIPLIER 0.75f
+        #define OMEGA_MULTIPLIER 0.75f
         
 
         vx = SPEED_MULTIPLIER*vx;
@@ -322,9 +332,9 @@ int main()
 
         if (SnailMode)
         {
-            vx = vx/10;
-            vy = vy/10;
-            omega = omega/10;
+            vx = vx/9.0f;
+            vy = vy/9.0f;
+            omega = omega/9.0f;
         }
 
         // OMNIWHEEL

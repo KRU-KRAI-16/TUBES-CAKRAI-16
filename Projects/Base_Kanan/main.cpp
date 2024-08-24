@@ -173,13 +173,17 @@ int main()
         FR_setvalue = BM_Base.getMotor2();
         FR_setvalue = FR_setvalue / ANALOG_SCALE;
 
-        float explicit_r0 = 0.0f;
+        float explicit_r0_BR = 0.0f;
+        float explicit_r0_FR = 0.0f;
 
-        // if (BR_setvalue == 0.0f  && FR_setvalue == 0.0f ){
-        //     explicit_r0 = 0.0f;
+        // if (BR_setvalue > 0.0f){
+        //     explicit_r0_BR = 5.0f;
+        // }
+        // if (FR_setvalue > 0.0f){
+        //     explicit_r0_FR = 5.0f;
         // }
 
-        // printf("mot1 : %f, mot2 : %f \n", BR_setvalue, FR_setvalue);
+        printf("mot1 : %f, mot2 : %f \n", BR_setvalue, FR_setvalue);
 
         if (millis - lastmillispulse > timeSampling){
             lastmillispulse = millis;
@@ -192,8 +196,8 @@ int main()
             pulseThen_BR = encoder_BR.getPulses();
             pulseThen_FR = encoder_FR.getPulses();
             
-            PWM_motor_BR = ADRC_BR.createInputSignal(ADRC_BR.fhan_setPointTrajectory(BR_setvalue, explicit_r0), rotatePerSec_BR, 1.0f);
-            PWM_motor_FR = ADRC_FR.createInputSignal(ADRC_FR.fhan_setPointTrajectory(FR_setvalue, explicit_r0), rotatePerSec_FR, 1.0f);
+            PWM_motor_BR = ADRC_BR.createInputSignal(ADRC_BR.fhan_setPointTrajectory(BR_setvalue, explicit_r0_BR), rotatePerSec_BR, 1.0f);
+            PWM_motor_FR = ADRC_FR.createInputSignal(ADRC_FR.fhan_setPointTrajectory(FR_setvalue, explicit_r0_FR), rotatePerSec_FR, 1.0f);
 
             // PID SEMENTARA
             // PWM_motor_BR = pid_BR.getOutput(rotatePerSec_BR, BR_setvalue);
