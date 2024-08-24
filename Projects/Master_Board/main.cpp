@@ -109,6 +109,7 @@ public:
 };
 
 //INISIASI TIMEOUT//
+TimeOutPS3 timeOut_R2(200);
 TimeOutPS3 timeOut_R1(200);
 TimeOutPS3 timeOut_L1(200);
 TimeOutPS3 timeOut_Atas(200);
@@ -157,7 +158,8 @@ int main()
     bool release_red_ball = false;
     bool release_blue_ball = false;
     bool separator_extended = false;
-    bool gripper_run = false;
+    bool gripper_grip = false;
+    bool gripper_lift = false;
 
     //TOGGLE SPEED MODE
     bool toggleL2 = false;
@@ -193,13 +195,25 @@ int main()
         release_blue_ball = false;
         release_red_ball = false;
         separator_extended = false;
-        gripper_run = false;
+        gripper_grip = false;
+        gripper_lift = false;
+
+        if (ps3.getR2())
+        {
+            if (timeOut_R2.checkTimeOut(true, millis))
+            {
+                gripper_lift = true;
+            }
+        }
+        else {
+            timeOut_R2.checkTimeOut(false, millis);
+        }
 
         if (ps3.getSegitiga())
         {
             if (timeOut_Segitiga.checkTimeOut(true, millis))
             {
-                gripper_run = true;
+                gripper_grip = true;
             }
         }
         else {
@@ -378,7 +392,8 @@ int main()
         storage.setSwitch3(separator_extended);
 
         // CAN GRIPPER
-        gripper.setSwitch1(gripper_run);
+        gripper.setSwitch1(gripper_grip);
+        gripper.setSwitch2(gripper_lift);
 
         can_kanan.sendCAN(can_kanan.getNoBM(), TS_SEND_CAN);
         can_kiri.sendCAN(can_kiri.getNoBM(), TS_SEND_CAN);
