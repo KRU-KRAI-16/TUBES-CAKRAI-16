@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// 
 #include "mbed.h"
 
+// ========================LIBRARIES=============================================
 // Board Manager
 #include "../../KRAI_library/Pinout/BoardManagerV1.h"
 #include "../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.hpp"
@@ -145,9 +147,9 @@ int main()
     float vx_mag = 1;
     float vy_mag = 1;
     float omega_mag = 0.7;
+    
+    // Slow mode
     bool SnailMode = false;
-
-    //Bismillah
 
     // float deltaVRight, deltaVLeft;
     // float deltaVFor, deltaVRev;
@@ -162,7 +164,7 @@ int main()
     bool gripper_lift = false;
 
     //TOGGLE SPEED MODE
-    bool toggleL2 = false;
+    // bool toggleL2 = false;
     //true -> on ; false -> off
 
     while (true)
@@ -197,8 +199,9 @@ int main()
         separator_extended = false;
         gripper_grip = false;
         gripper_lift = false;
+        SnailMode = false;
 
-        if (ps3.getR2())
+        if (ps3.getR2() && !ps3.getL2())
         {
             if (timeOut_R2.checkTimeOut(true, millis))
             {
@@ -319,22 +322,31 @@ int main()
             timeOut_Kanan.checkTimeOut(false, millis);
         }
 
-        
-
-        if (ps3.getL2())
+        if (ps3.getL2() && !ps3.getR2())
         {
             if (timeOut_L2.checkTimeOut(true, millis))
             {
-                if (!toggleL2){
-                    SnailMode = !SnailMode;
-                    toggleL2 = true;
-                }
+                SnailMode = true;
             }
         }
         else {
             timeOut_L2.checkTimeOut(false, millis);
-            toggleL2 = false;
         }
+        
+        // if (ps3.getL2())
+        // {
+        //     if (timeOut_L2.checkTimeOut(true, millis))
+        //     {
+        //         if (!toggleL2){
+        //             SnailMode = !SnailMode;
+        //             toggleL2 = true;
+        //         }
+        //     }
+        // }
+        // else {
+        //     timeOut_L2.checkTimeOut(false, millis);
+        //     toggleL2 = false;
+        // }
 
         #define SPEED_MULTIPLIER 0.75f
         #define OMEGA_MULTIPLIER 0.75f

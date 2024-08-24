@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.19.0)
 
-set(MBED_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../../mbed-os CACHE INTERNAL "")
+set(MBED_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../mbed-os CACHE INTERNAL "")
 set(MBED_CONFIG_PATH ${CMAKE_CURRENT_BINARY_DIR} CACHE INTERNAL "")
 set(APP_TARGET Master_Board)
 
@@ -15,9 +15,9 @@ add_subdirectory(${MBED_PATH} ${CMAKE_CURRENT_BINARY_DIR}/mbed-os)
 
 add_executable(${APP_TARGET}
     main.cpp
-    ../../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.cpp
-    ../../../KRAI_library/JoystickPS3/JoystickPS3.cpp
-    ../../../KRAI_library/InverseKinematics/Omni4Wheel.cpp
+    ../../KRAI_library/CanBusKRAI/BMAktuatorKRAI.cpp
+    ../../KRAI_library/JoystickPS3/JoystickPS3.cpp
+    ../../KRAI_library/InverseKinematics/Omni4Wheel.cpp
 )
 
 target_link_libraries(${APP_TARGET} mbed-os)
