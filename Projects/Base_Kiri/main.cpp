@@ -199,16 +199,23 @@ int main()
             pulseThen_FL = encoder_FL.getPulses();
 
             PWM_motor_BL = ADRC_BL.createInputSignal(ADRC_BL.fhan_setPointTrajectory(BL_setvalue, explicit_r0_BL), rotatePerSec_BL, 1.0f);
-            PWM_motor_FL = ADRC_FL.createInputSignal(ADRC_FL.fhan_setPointTrajectory(FL_setvalue, explicit_r0_FL), rotatePerSec_FL, 1.0f);\
+            PWM_motor_FL = ADRC_FL.createInputSignal(ADRC_FL.fhan_setPointTrajectory(FL_setvalue, explicit_r0_FL), rotatePerSec_FL, 1.0f);
 
+            // printf("BL_encoder: %d, FL_encoder: %d \n", encoder_BL.getPulses(), encoder_FL.getPulses());
             
             // PWM_motor_BL = pid_BL.getOutput(rotatePerSec_BL, BL_setvalue);
             // PWM_motor_FL = pid_FL.getOutput(rotatePerSec_FL, FL_setvalue);
         }
 
         // ----------------------------------------------------------------------
-        motor_BL.speed(PWM_motor_BL);
-        motor_FL.speed(PWM_motor_FL);
+        if (!BM_Base.getSwitch1()){
+            motor_BL.forcebrake();
+            motor_FL.forcebrake();
+        }
+        else{
+            motor_BL.speed(PWM_motor_BL);
+            motor_FL.speed(PWM_motor_FL);
+        }
     }
     
     

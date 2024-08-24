@@ -169,6 +169,9 @@ int main()
 
     while (true)
     {
+        can_kanan.setSwitch1(true);
+        can_kanan.setSwitch2(true);
+        
         ps3.updateMillis(millis);
         ps3.baca_data();
         ps3.olah_data();
@@ -333,6 +336,9 @@ int main()
             timeOut_L2.checkTimeOut(false, millis);
         }
         
+
+        //-----TOGGLE FEATURE SNAILMODE IF NEEDED-----
+
         // if (ps3.getL2())
         // {
         //     if (timeOut_L2.checkTimeOut(true, millis))
@@ -348,6 +354,8 @@ int main()
         //     toggleL2 = false;
         // }
 
+        //---------------------------------------------
+
         #define SPEED_MULTIPLIER 0.75f
         #define OMEGA_MULTIPLIER 0.75f
         
@@ -355,6 +363,15 @@ int main()
         vx = SPEED_MULTIPLIER*vx;
         vy = SPEED_MULTIPLIER*vy;
         omega = OMEGA_MULTIPLIER*omega;
+        
+        //-----FORCEBREAK WITH L2 AND R2-----
+        if (ps3.getL2() && ps3.getR2()){
+            vx = 0;
+            vy = 0;
+            omega = 0;
+            can_kanan.setSwitch1(false);
+            can_kiri.setSwitch1(false);
+        }
 
         if (SnailMode)
         {

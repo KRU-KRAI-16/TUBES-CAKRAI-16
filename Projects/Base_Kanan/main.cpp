@@ -205,8 +205,15 @@ int main()
         }
 
         // ----------------------------------------------------------------------
-        motor_BR.speed(PWM_motor_BR);
-        motor_FR.speed(PWM_motor_FR);
+
+        if (!BM_Base.getSwitch1()){
+            motor_BR.forcebrake();
+            motor_FR.forcebrake();
+        }
+        else{
+            motor_BR.speed(PWM_motor_BR);
+            motor_FR.speed(PWM_motor_FR);
+        }
     }
     
     
