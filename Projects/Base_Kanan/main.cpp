@@ -183,7 +183,8 @@ int main()
         //     explicit_r0_FR = 5.0f;
         // }
 
-        printf("mot1 : %f, mot2 : %f \n", BR_setvalue, FR_setvalue);
+        // printf("mot1 : %f, mot2 : %f \n", BR_setvalue, FR_setvalue);
+
 
         if (millis - lastmillispulse > timeSampling){
             lastmillispulse = millis;
@@ -205,7 +206,6 @@ int main()
         }
 
         // ----------------------------------------------------------------------
-
         if (!BM_Base.getSwitch1()){
             motor_BR.forcebrake();
             motor_FR.forcebrake();
@@ -214,6 +214,7 @@ int main()
             motor_BR.speed(PWM_motor_BR);
             motor_FR.speed(PWM_motor_FR);
         }
+        
     }
     
     

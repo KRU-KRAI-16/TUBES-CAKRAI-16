@@ -375,9 +375,9 @@ int main()
 
         if (SnailMode)
         {
-            vx = vx/9.0f;
-            vy = vy/9.0f;
-            omega = omega/9.0f;
+            vx = vx/8.0f;
+            vy = vy/8.0f;
+            omega = omega/8.0f;
         }
 
         // OMNIWHEEL
