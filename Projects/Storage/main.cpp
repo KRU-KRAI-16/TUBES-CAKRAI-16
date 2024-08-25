@@ -129,7 +129,7 @@ int main (){
             if (separator_button_state == true)
             {
                 separator_state = !separator_state;
-                separator_state ? separator_servo.position(110) : separator_servo.position(30);
+                separator_state ? separator_servo.position(0) : separator_servo.position(65);
 
             }
             
